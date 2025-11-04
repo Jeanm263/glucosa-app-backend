@@ -1,0 +1,47 @@
+# =====================================
+# NODE / TYPESCRIPT
+# =====================================
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# =====================================
+# ENVIRONMENT VARIABLES
+# =====================================
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# =====================================
+# SYSTEM / EDITOR
+# =====================================
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# =====================================
+# DOCKER
+# =====================================
+/docker/data/
+*.pid
+
+# =====================================
+# TESTS / COVERAGE
+# =====================================
+coverage/
+.nyc_output/
+
+# =====================================
+# BUILD / TEMP FILES
+# =====================================
+.tmp/
+.cache/
