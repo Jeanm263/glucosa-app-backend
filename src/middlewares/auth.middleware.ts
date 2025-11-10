@@ -19,19 +19,22 @@ export const authenticateToken = async (
     const token = req.cookies.token;
 
     if (!token) {
-      return res.status(401).json({ message: 'Acceso no autorizado. Token no proporcionado.' });
+      // Return 401 without JSON to avoid triggering frontend interceptor
+      return res.status(401).send('Acceso no autorizado. Token no proporcionado.');
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret') as { userId: string };
     
     const user = await User.findById(decoded.userId);
     if (!user) {
-      return res.status(401).json({ message: 'Usuario no encontrado.' });
+      // Return 401 without JSON to avoid triggering frontend interceptor
+      return res.status(401).send('Usuario no encontrado.');
     }
 
     req.user = user;
     next();
   } catch (error) {
-    return res.status(401).json({ message: 'Token inválido o expirado.' });
+    // Return 401 without JSON to avoid triggering frontend interceptor
+    return res.status(401).send('Token inválido o expirado.');
   }
 };

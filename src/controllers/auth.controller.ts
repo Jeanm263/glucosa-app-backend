@@ -41,8 +41,10 @@ export const register = async (req: Request, res: Response) => {
       maxAge: 7 * 24 * 60 * 60 * 1000 // 7 días
     });
 
+    // Enviar respuesta sin token en cookie para que el frontend maneje la redirección
     res.status(201).json({
       success: true,
+      message: 'Usuario registrado exitosamente. Por favor inicia sesión.',
       user: {
         id: user._id,
         name: user.name,
@@ -71,15 +73,11 @@ export const checkAuth = async (req: Request, res: Response) => {
       });
     }
     
-    res.status(401).json({
-      success: false,
-      message: 'No autenticado'
-    });
+    // Return 401 without JSON to avoid triggering interceptor
+    return res.status(401).send('No autenticado');
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Error al verificar autenticación'
-    });
+    // Return 500 without JSON to avoid triggering interceptor
+    return res.status(500).send('Error al verificar autenticación');
   }
 };
 
