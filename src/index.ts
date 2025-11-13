@@ -1,6 +1,7 @@
 import app from './app';
 import dotenv from 'dotenv';
 import { connectDB } from './config/db';
+import redisClient from './config/redis';
 
 // Importar modelo de alimentos para inicializar datos
 import Food from './models/food.model';
@@ -42,8 +43,11 @@ const initializeEducationData = async () => {
   }
 };
 
-// Conexión a la base de datos y arranque del servidor
+// Conexión a la base de datos y Redis, y arranque del servidor
 connectDB().then(async () => {
+  // Conectar a Redis
+  // redisClient.connect(); // Comentado para usar mock de Redis
+  
   // Inicializar datos
   await initializeFoodData();
   await initializeEducationData();

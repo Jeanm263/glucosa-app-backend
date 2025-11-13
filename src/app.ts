@@ -4,6 +4,10 @@ import cors from 'cors';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
+import rateLimit from 'express-rate-limit';
+import helmet from 'helmet';
+import compression from 'compression';
+import { metricsMiddleware, metricsEndpoint } from './middlewares/metrics.middleware';
 
 // Importar rutas
 import usuarioRoutes from './routes/usuario.router';
@@ -14,11 +18,26 @@ import foodLogRoutes from './routes/foodLog.router';
 import mealPlanRoutes from './routes/mealPlan.router';
 import notificationRoutes from './routes/notification.router';
 import symptomRoutes from './routes/symptom.router';
+import glucoseRoutes from './routes/glucose.router';
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 4000;
+
+// Configuración de seguridad
+app.use(helmet());
+
+// Configuración de rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 100, // límite de 100 solicitudes por ventana
+  message: 'Demasiadas solicitudes desde esta IP, por favor intenta nuevamente más tarde.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+app.use(limiter);
 
 // Configuración de CORS para permitir solicitudes del frontend
 const corsOptions = {
@@ -28,9 +47,11 @@ const corsOptions = {
 
 // Middleware
 console.log('Configurando middlewares...');
+app.use(compression());
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
+app.use(metricsMiddleware);
 console.log('Middlewares configurados');
 
 // Rutas
@@ -43,6 +64,7 @@ app.use('/api/food-logs', foodLogRoutes);
 app.use('/api/meal-plans', mealPlanRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/symptoms', symptomRoutes);
+app.use('/api/glucose', glucoseRoutes);
 console.log('Rutas registradas correctamente');
 
 // Ruta de salud
@@ -54,6 +76,9 @@ app.get('/api/health', (req, res) => {
     timestamp: new Date().toISOString()
   });
 });
+
+// Endpoint de métricas
+app.get('/api/metrics', metricsEndpoint);
 
 // Ruta raíz
 app.get('/', (req, res) => {
@@ -67,7 +92,8 @@ app.get('/', (req, res) => {
       foodLogs: '/api/food-logs',
       mealPlans: '/api/meal-plans',
       notifications: '/api/notifications',
-      symptoms: '/api/symptoms'
+      symptoms: '/api/symptoms',
+      glucose: '/api/glucose'
     }
   });
 });

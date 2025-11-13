@@ -1,0 +1,633 @@
+openapi: 3.0.0
+info:
+  title: Glucosa-App API
+  description: API para la aplicación de gestión de diabetes Glucosa-App
+  version: 1.0.0
+  contact:
+    name: Equipo de Desarrollo
+    email: admin@glucoguide.com
+
+servers:
+  - url: http://localhost:4000/api
+    description: Servidor de desarrollo
+  - url: https://api.yourdomain.com
+    description: Servidor de producción
+
+paths:
+  /auth/register:
+    post:
+      summary: Registrar un nuevo usuario
+      tags:
+        - Autenticación
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Usuario registrado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/login:
+    post:
+      summary: Iniciar sesión
+      tags:
+        - Autenticación
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Inicio de sesión exitoso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Credenciales inválidas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/me:
+    get:
+      summary: Obtener información del usuario actual
+      tags:
+        - Autenticación
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Información del usuario
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: No autenticado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /foods:
+    get:
+      summary: Obtener todos los alimentos
+      tags:
+        - Alimentos
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Lista de alimentos
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  count:
+                    type: integer
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Food'
+        '500':
+          description: Error del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /foods/search:
+    get:
+      summary: Buscar alimentos
+      tags:
+        - Alimentos
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: query
+          in: query
+          description: Término de búsqueda
+          required: false
+          schema:
+            type: string
+        - name: category
+          in: query
+          description: Categoría de alimentos
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Resultados de búsqueda
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  count:
+                    type: integer
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Food'
+        '500':
+          description: Error del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /foods/{id}:
+    get:
+      summary: Obtener un alimento por ID
+      tags:
+        - Alimentos
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Información del alimento
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/Food'
+        '404':
+          description: Alimento no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Error del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /foods/categories:
+    get:
+      summary: Obtener categorías de alimentos
+      tags:
+        - Alimentos
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Lista de categorías
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      type: string
+        '500':
+          description: Error del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /education:
+    get:
+      summary: Obtener contenido educativo
+      tags:
+        - Educación
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Contenido educativo
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  count:
+                    type: integer
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/EducationContent'
+        '500':
+          description: Error del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /education/{id}:
+    get:
+      summary: Obtener contenido educativo por ID
+      tags:
+        - Educación
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Contenido educativo
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/EducationContent'
+        '404':
+          description: Contenido no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Error del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /food-logs:
+    get:
+      summary: Obtener registros de alimentos
+      tags:
+        - Registros de Alimentos
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Registros de alimentos
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  count:
+                    type: integer
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/FoodLog'
+        '500':
+          description: Error del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      summary: Crear un registro de alimento
+      tags:
+        - Registros de Alimentos
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FoodLogRequest'
+      responses:
+        '201':
+          description: Registro creado exitosamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/FoodLog'
+        '400':
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Error del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /glucose:
+    get:
+      summary: Obtener registros de glucosa
+      tags:
+        - Glucosa
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Registros de glucosa
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  count:
+                    type: integer
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/GlucoseRecord'
+        '500':
+          description: Error del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      summary: Crear un registro de glucosa
+      tags:
+        - Glucosa
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GlucoseRecordRequest'
+      responses:
+        '201':
+          description: Registro creado exitosamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/GlucoseRecord'
+        '400':
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Error del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        age:
+          type: integer
+        diabetesType:
+          type: string
+          enum: [type1, type2, gestational, prediabetes, other]
+        initialGlucoseLevel:
+          type: number
+        createdAt:
+          type: string
+          format: date-time
+
+    RegisterRequest:
+      type: object
+      required:
+        - name
+        - email
+        - password
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 6
+        age:
+          type: integer
+        diabetesType:
+          type: string
+          enum: [type1, type2, gestational, prediabetes, other]
+        initialGlucoseLevel:
+          type: number
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+
+    AuthResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        user:
+          $ref: '#/components/schemas/User'
+
+    Food:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        category:
+          type: string
+        glycemicIndex:
+          type: integer
+        carbohydrates:
+          type: number
+        fiber:
+          type: number
+        sugars:
+          type: number
+        portion:
+          type: string
+        trafficLight:
+          type: string
+          enum: [green, yellow, red]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    EducationContent:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        content:
+          type: string
+        category:
+          type: string
+        level:
+          type: string
+          enum: [basic, intermediate, advanced]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    FoodLog:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        foodId:
+          type: string
+        portion:
+          type: string
+        consumedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+
+    FoodLogRequest:
+      type: object
+      required:
+        - foodId
+        - portion
+        - consumedAt
+      properties:
+        foodId:
+          type: string
+        portion:
+          type: string
+        consumedAt:
+          type: string
+          format: date-time
+
+    GlucoseRecord:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        level:
+          type: number
+        measuredAt:
+          type: string
+          format: date-time
+        notes:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    GlucoseRecordRequest:
+      type: object
+      required:
+        - level
+        - measuredAt
+      properties:
+        level:
+          type: number
+        measuredAt:
+          type: string
+          format: date-time
+        notes:
+          type: string
+
+    Error:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        error:
+          type: string
+
+tags:
+  - name: Autenticación
+    description: Endpoints para registro e inicio de sesión
+  - name: Alimentos
+    description: Endpoints para gestión de alimentos
+  - name: Educación
+    description: Endpoints para contenido educativo
+  - name: Registros de Alimentos
+    description: Endpoints para registros de alimentos consumidos
+  - name: Glucosa
+    description: Endpoints para registros de niveles de glucosa

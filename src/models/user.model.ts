@@ -7,6 +7,7 @@ export interface IUser extends mongoose.Document {
   password: string;
   age?: number;
   diabetesType?: string;
+  initialGlucoseLevel?: number;
   preferences?: {
     dietaryRestrictions?: string[];
     favoriteFoods?: string[];
@@ -45,7 +46,12 @@ const userSchema = new mongoose.Schema({
   },
   diabetesType: {
     type: String,
-    enum: ['type1', 'type2', 'gestational', 'other']
+    enum: ['type1', 'type2', 'gestational', 'prediabetes', 'other']
+  },
+  initialGlucoseLevel: {
+    type: Number,
+    min: 1,
+    max: 1000
   },
   preferences: {
     dietaryRestrictions: [{

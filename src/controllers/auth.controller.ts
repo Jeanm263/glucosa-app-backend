@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import User from '../models/user.model';
 import { IUser } from '../models/user.model';
+import logger from '../utils/logger';
 
 // Extender la interfaz de Request para incluir el usuario
 declare global {
@@ -14,16 +15,21 @@ declare global {
 
 export const register = async (req: Request, res: Response) => {
   try {
-    const { name, email, password, age, diabetesType } = req.body;
+    const { name, email, password, age, diabetesType, initialGlucoseLevel } = req.body;
 
     // Verificar si el usuario ya existe
     const userExists = await User.findOne({ email });
     if (userExists) {
+      logger.warn('Intento de registro con email existente', {
+        email,
+        ip: req.ip,
+        userAgent: req.get('User-Agent')
+      });
       return res.status(400).json({ message: 'El usuario ya existe' });
     }
 
     // Crear nuevo usuario
-    const user = new User({ name, email, password, age, diabetesType });
+    const user = new User({ name, email, password, age, diabetesType, initialGlucoseLevel });
     await user.save();
 
     // Generar token
@@ -41,6 +47,12 @@ export const register = async (req: Request, res: Response) => {
       maxAge: 7 * 24 * 60 * 60 * 1000 // 7 días
     });
 
+    logger.info('Usuario registrado exitosamente', {
+      userId: user._id,
+      email: user.email,
+      ip: req.ip
+    });
+
     // Enviar respuesta sin token en cookie para que el frontend maneje la redirección
     res.status(201).json({
       success: true,
@@ -50,10 +62,17 @@ export const register = async (req: Request, res: Response) => {
         name: user.name,
         email: user.email,
         age: user.age,
-        diabetesType: user.diabetesType
+        diabetesType: user.diabetesType,
+        initialGlucoseLevel: user.initialGlucoseLevel
       }
     });
   } catch (error) {
+    logger.error('Error al registrar usuario', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      email: req.body.email,
+      ip: req.ip
+    });
     res.status(500).json({ message: 'Error al registrar usuario' });
   }
 };
@@ -61,6 +80,11 @@ export const register = async (req: Request, res: Response) => {
 export const checkAuth = async (req: Request, res: Response) => {
   try {
     if (req.user) {
+      logger.info('Verificación de autenticación exitosa', {
+        userId: req.user._id,
+        email: req.user.email,
+        ip: req.ip
+      });
       return res.json({
         success: true,
         user: {
@@ -68,14 +92,24 @@ export const checkAuth = async (req: Request, res: Response) => {
           name: req.user.name,
           email: req.user.email,
           age: req.user.age,
-          diabetesType: req.user.diabetesType
+          diabetesType: req.user.diabetesType,
+          initialGlucoseLevel: req.user.initialGlucoseLevel
         }
       });
     }
     
+    logger.warn('Verificación de autenticación fallida: Usuario no autenticado', {
+      ip: req.ip,
+      userAgent: req.get('User-Agent')
+    });
     // Return 401 without JSON to avoid triggering interceptor
     return res.status(401).send('No autenticado');
   } catch (error) {
+    logger.error('Error al verificar autenticación', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      ip: req.ip
+    });
     // Return 500 without JSON to avoid triggering interceptor
     return res.status(500).send('Error al verificar autenticación');
   }
@@ -88,12 +122,22 @@ export const login = async (req: Request, res: Response) => {
     // Buscar usuario
     const user = await User.findOne({ email });
     if (!user) {
+      logger.warn('Intento de inicio de sesión con email no existente', {
+        email,
+        ip: req.ip,
+        userAgent: req.get('User-Agent')
+      });
       return res.status(401).json({ message: 'Credenciales inválidas' });
     }
 
     // Verificar contraseña
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
+      logger.warn('Intento de inicio de sesión con contraseña incorrecta', {
+        email,
+        ip: req.ip,
+        userAgent: req.get('User-Agent')
+      });
       return res.status(401).json({ message: 'Credenciales inválidas' });
     }
 
@@ -112,6 +156,12 @@ export const login = async (req: Request, res: Response) => {
       maxAge: 7 * 24 * 60 * 60 * 1000
     });
 
+    logger.info('Inicio de sesión exitoso', {
+      userId: user._id,
+      email: user.email,
+      ip: req.ip
+    });
+
     res.json({
       success: true,
       user: {
@@ -119,10 +169,17 @@ export const login = async (req: Request, res: Response) => {
         name: user.name,
         email: user.email,
         age: user.age,
-        diabetesType: user.diabetesType
+        diabetesType: user.diabetesType,
+        initialGlucoseLevel: user.initialGlucoseLevel
       }
     });
   } catch (error) {
+    logger.error('Error al iniciar sesión', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      email: req.body.email,
+      ip: req.ip
+    });
     res.status(500).json({ message: 'Error al iniciar sesión' });
   }
 };
