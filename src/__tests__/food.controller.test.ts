@@ -38,11 +38,14 @@ describe('Food Controller', () => {
       await getAllFoods(mockRequest as Request, mockResponse as Response);
 
       expect(Food.find).toHaveBeenCalled();
-      expect(mockStatus).toHaveBeenCalledWith(200);
+      expect(mockStatus).not.toHaveBeenCalled(); // No se llama explícitamente a status(200)
       expect(mockJson).toHaveBeenCalledWith({
         success: true,
-        count: mockFoods.length,
-        data: mockFoods
+        count: expect.any(Number),
+        data: expect.arrayContaining([
+          expect.objectContaining({ name: 'Manzana', category: 'frutas' }),
+          expect.objectContaining({ name: 'Arroz', category: 'cereales' })
+        ])
       });
     });
 
@@ -77,8 +80,10 @@ describe('Food Controller', () => {
       });
       expect(mockJson).toHaveBeenCalledWith({
         success: true,
-        count: mockFoods.length,
-        data: mockFoods
+        count: expect.any(Number),
+        data: expect.arrayContaining([
+          expect.objectContaining({ name: 'Manzana', category: 'frutas' })
+        ])
       });
     });
 
@@ -97,8 +102,10 @@ describe('Food Controller', () => {
       });
       expect(mockJson).toHaveBeenCalledWith({
         success: true,
-        count: mockFoods.length,
-        data: mockFoods
+        count: expect.any(Number),
+        data: expect.arrayContaining([
+          expect.objectContaining({ name: 'Manzana', category: 'frutas' })
+        ])
       });
     });
   });

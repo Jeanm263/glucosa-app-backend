@@ -23,7 +23,7 @@ export const register = async (req: Request, res: Response) => {
       logger.warn('Intento de registro con email existente', {
         email,
         ip: req.ip,
-        userAgent: req.get('User-Agent')
+        userAgent: req.get ? req.get('User-Agent') : 'Unknown'
       });
       return res.status(400).json({ message: 'El usuario ya existe' });
     }
@@ -100,7 +100,7 @@ export const checkAuth = async (req: Request, res: Response) => {
     
     logger.warn('Verificación de autenticación fallida: Usuario no autenticado', {
       ip: req.ip,
-      userAgent: req.get('User-Agent')
+      userAgent: req.get ? req.get('User-Agent') : 'Unknown'
     });
     // Return 401 without JSON to avoid triggering interceptor
     return res.status(401).send('No autenticado');
@@ -125,7 +125,7 @@ export const login = async (req: Request, res: Response) => {
       logger.warn('Intento de inicio de sesión con email no existente', {
         email,
         ip: req.ip,
-        userAgent: req.get('User-Agent')
+        userAgent: req.get ? req.get('User-Agent') : 'Unknown'
       });
       return res.status(401).json({ message: 'Credenciales inválidas' });
     }
@@ -136,7 +136,7 @@ export const login = async (req: Request, res: Response) => {
       logger.warn('Intento de inicio de sesión con contraseña incorrecta', {
         email,
         ip: req.ip,
-        userAgent: req.get('User-Agent')
+        userAgent: req.get ? req.get('User-Agent') : 'Unknown'
       });
       return res.status(401).json({ message: 'Credenciales inválidas' });
     }
