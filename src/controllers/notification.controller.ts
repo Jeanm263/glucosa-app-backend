@@ -1,367 +1,187 @@
 import { Request, Response } from 'express';
-import Notification from '../models/notification.model';
+import webpush from 'web-push';
 import logger from '../utils/logger';
 
 // Almacenamiento en memoria para suscripciones (en producción usar base de datos)
+ 
 let subscriptions: any[] = [];
 
-// Obtener todas las notificaciones
-export const getAllNotifications = async (req: Request, res: Response) => {
-  try {
-    const { page = 1, limit = 10, unreadOnly = false } = req.query;
-    
-    // Construir filtro
-    const filter: any = { userId: (req as any).user._id };
-    if (unreadOnly === 'true') {
-      filter.isRead = false;
-    }
-    
-    // Obtener notificaciones con paginación
-    const notifications = await Notification.find(filter)
-      .sort({ scheduledAt: -1 })
-      .limit(parseInt(limit as string))
-      .skip((parseInt(page as string) - 1) * parseInt(limit as string));
-    
-    // Contar total
-    const total = await Notification.countDocuments(filter);
-    
-    res.json({
-      success: true,
-      data: notifications,
-      pagination: {
-        page: parseInt(page as string),
-        limit: parseInt(limit as string),
-        total,
-        pages: Math.ceil(total / parseInt(limit as string))
-      }
-    });
-  } catch (error) {
-    logger.error('Error al obtener notificaciones', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error al obtener notificaciones'
-    });
-  }
-};
+// Configurar VAPID keys
+const vapidPublicKey = process.env.VAPID_PUBLIC_KEY || '';
+const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY || '';
 
-// Obtener una notificación por ID
-export const getNotificationById = async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-    const notification = await Notification.findOne({
-      _id: id,
-      userId: (req as any).user._id
-    });
-    
-    if (!notification) {
-      return res.status(404).json({
-        success: false,
-        message: 'Notificación no encontrada'
-      });
-    }
-    
-    res.json({
-      success: true,
-      data: notification
-    });
-  } catch (error) {
-    logger.error('Error al obtener notificación', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error al obtener notificación'
-    });
-  }
-};
+if (vapidPublicKey && vapidPrivateKey) {
+  webpush.setVapidDetails(
+    'mailto:admin@glucoguide.com',
+    vapidPublicKey,
+    vapidPrivateKey
+  );
+}
 
-// Crear una nueva notificación
-export const createNotification = async (req: Request, res: Response) => {
-  try {
-    const notificationData = {
-      ...req.body,
-      userId: (req as any).user._id
-    };
-    
-    const notification = new Notification(notificationData);
-    await notification.save();
-    
-    res.status(201).json({
-      success: true,
-      data: notification
-    });
-  } catch (error: any) {
-    if (error.name === 'ValidationError') {
-      return res.status(400).json({
-        success: false,
-        message: 'Datos inválidos',
-        error: Object.values(error.errors).map((err: any) => err.message)
-      });
-    }
-    
-    logger.error('Error al crear notificación', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error al crear notificación'
-    });
-  }
-};
-
-// Actualizar una notificación
-export const updateNotification = async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-    const notification = await Notification.findOneAndUpdate(
-      { _id: id, userId: (req as any).user._id },
-      req.body,
-      { new: true, runValidators: true }
-    );
-    
-    if (!notification) {
-      return res.status(404).json({
-        success: false,
-        message: 'Notificación no encontrada'
-      });
-    }
-    
-    res.json({
-      success: true,
-      data: notification
-    });
-  } catch (error: any) {
-    if (error.name === 'ValidationError') {
-      return res.status(400).json({
-        success: false,
-        message: 'Datos inválidos',
-        error: Object.values(error.errors).map((err: any) => err.message)
-      });
-    }
-    
-    logger.error('Error al actualizar notificación', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error al actualizar notificación'
-    });
-  }
-};
-
-// Eliminar una notificación
-export const deleteNotification = async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-    const notification = await Notification.findOneAndDelete({
-      _id: id,
-      userId: (req as any).user._id
-    });
-    
-    if (!notification) {
-      return res.status(404).json({
-        success: false,
-        message: 'Notificación no encontrada'
-      });
-    }
-    
-    res.json({
-      success: true,
-      message: 'Notificación eliminada correctamente'
-    });
-  } catch (error) {
-    logger.error('Error al eliminar notificación', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error al eliminar notificación'
-    });
-  }
-};
-
-// Marcar notificación como leída
-export const markAsRead = async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-    const notification = await Notification.findOneAndUpdate(
-      { _id: id, userId: (req as any).user._id },
-      { isRead: true, readAt: new Date() },
-      { new: true }
-    );
-    
-    if (!notification) {
-      return res.status(404).json({
-        success: false,
-        message: 'Notificación no encontrada'
-      });
-    }
-    
-    res.json({
-      success: true,
-      data: notification
-    });
-  } catch (error) {
-    logger.error('Error al marcar notificación como leída', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error al marcar notificación como leída'
-    });
-  }
-};
-
-// Marcar todas las notificaciones como leídas
-export const markAllAsRead = async (req: Request, res: Response) => {
-  try {
-    const result = await Notification.updateMany(
-      { userId: (req as any).user._id, isRead: false },
-      { isRead: true, readAt: new Date() }
-    );
-    
-    res.json({
-      success: true,
-      message: `Se marcaron ${result.modifiedCount} notificaciones como leídas`
-    });
-  } catch (error) {
-    logger.error('Error al marcar todas las notificaciones como leídas', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error al marcar todas las notificaciones como leídas'
-    });
-  }
-};
-
-// Suscribir a notificaciones push
-export const subscribeToPush = async (req: Request, res: Response) => {
+// Suscribir a notificaciones
+export const subscribeToNotifications = async (req: Request, res: Response) => {
   try {
     const subscription = req.body;
     
-    // Verificar que la suscripción no exista ya
-    const exists = subscriptions.some(sub => 
+    // Verificar si la suscripción ya existe
+    const exists = subscriptions.some((sub: any) => 
       sub.endpoint === subscription.endpoint
     );
     
     if (!exists) {
       subscriptions.push(subscription);
-      logger.info('Nueva suscripción a notificaciones push', { 
-        endpoint: subscription.endpoint 
-      });
+      logger.info('Nueva suscripción añadida', { endpoint: subscription.endpoint });
     }
     
-    res.json({ 
+    res.status(201).json({ 
       success: true, 
-      message: 'Suscripción registrada correctamente' 
+      message: 'Suscripción añadida correctamente' 
     });
-  } catch (error) {
-    logger.error('Error al suscribir a notificaciones push', error);
+  } catch (error: any) {
+    logger.error('Error al suscribir a notificaciones:', error);
     res.status(500).json({ 
       success: false, 
-      message: 'Error al suscribir a notificaciones push' 
+      message: 'Error al suscribir a notificaciones',
+      error: error.message
     });
   }
 };
 
-// Enviar notificación a todos (simulado)
+// Cancelar suscripción a notificaciones
+export const unsubscribeFromNotifications = async (req: Request, res: Response) => {
+  try {
+    const { endpoint } = req.body;
+    
+    subscriptions = subscriptions.filter((sub: any) => 
+      sub.endpoint !== endpoint
+    );
+    
+    logger.info('Suscripción eliminada', { endpoint });
+    
+    res.json({ 
+      success: true, 
+      message: 'Suscripción eliminada correctamente' 
+    });
+  } catch (error: any) {
+    logger.error('Error al cancelar suscripción:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error al cancelar suscripción',
+      error: error.message
+    });
+  }
+};
+
+// Enviar notificación a todos los suscriptores
 export const sendNotificationToAll = async (req: Request, res: Response) => {
   try {
-    const { title, message, userId } = req.body;
-    
-    // Crear payload de notificación
+    const { title, body, icon, badge } = req.body;
     const payload = JSON.stringify({
       title,
-      message,
-      timestamp: new Date().toISOString()
+      body,
+      icon: icon || '/icon-192x192.png',
+      badge: badge || '/badge-72x72.png',
+      timestamp: Date.now()
     });
-    
-    // Simular envío de notificaciones (webpush deshabilitado)
-    logger.info('Notificaciones simuladas (webpush deshabilitado)', { 
-      count: subscriptions.length,
-      title,
-      message
+
+    // Enviar notificación a todas las suscripciones
+    const sendPromises = subscriptions.map((subscription: any) => {
+      return webpush.sendNotification(subscription, payload)
+        .catch((error: any) => {
+          logger.error('Error enviando notificación:', error);
+          
+          // Si la suscripción ya no es válida, eliminarla
+          if (error.statusCode === 410) {
+            subscriptions = subscriptions.filter((sub: any) => 
+              sub.endpoint !== subscription.endpoint
+            );
+            logger.info('Suscripción eliminada por ser inválida', { 
+              endpoint: subscription.endpoint 
+            });
+          }
+        });
     });
+
+    await Promise.all(sendPromises);
     
     res.json({ 
       success: true, 
-      message: 'Notificaciones simuladas correctamente (webpush deshabilitado)' 
+      message: 'Notificaciones enviadas correctamente' 
     });
-  } catch (error) {
-    logger.error('Error al enviar notificaciones', error);
+  } catch (error: any) {
+    logger.error('Error al enviar notificaciones:', error);
     res.status(500).json({ 
       success: false, 
-      message: 'Error al enviar notificaciones' 
+      message: 'Error al enviar notificaciones',
+      error: error.message
     });
   }
 };
 
-// Enviar notificación personalizada (simulado)
-export const sendPersonalizedNotification = async (userId: string, title: string, message: string) => {
+// Enviar notificación a un usuario específico
+export const sendNotificationToUser = async (req: Request, res: Response) => {
   try {
-    // En un entorno real, filtraríamos por userId
+    const { userId, title, body, icon, badge } = req.body;
+    
+    // En este ejemplo, enviamos a todas las suscripciones
+    // En una implementación real, filtraríamos por userId
     const payload = JSON.stringify({
       title,
-      message,
-      userId,
-      timestamp: new Date().toISOString()
+      body,
+      icon: icon || '/icon-192x192.png',
+      badge: badge || '/badge-72x72.png',
+      timestamp: Date.now(),
+      userId
     });
+
+    const sendPromises = subscriptions.map((subscription: any) => {
+      return webpush.sendNotification(subscription, payload)
+        .catch((error: any) => {
+          logger.error('Error enviando notificación a usuario:', error);
+          
+          if (error.statusCode === 410) {
+            subscriptions = subscriptions.filter((sub: any) => 
+              sub.endpoint !== subscription.endpoint
+            );
+            logger.info('Suscripción eliminada por ser inválida', { 
+              endpoint: subscription.endpoint 
+            });
+          }
+        });
+    });
+
+    await Promise.all(sendPromises);
     
-    // Simular envío de notificaciones (webpush deshabilitado)
-    logger.info('Notificaciones personalizadas simuladas (webpush deshabilitado)', { 
-      userId,
-      title,
-      message
+    res.json({ 
+      success: true, 
+      message: 'Notificaciones enviadas al usuario correctamente' 
     });
-  } catch (error) {
-    logger.error('Error al enviar notificaciones personalizadas', error);
+  } catch (error: any) {
+    logger.error('Error al enviar notificación al usuario:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error al enviar notificación al usuario',
+      error: error.message
+    });
   }
 };
 
 // Obtener estadísticas de notificaciones
 export const getNotificationStats = async (req: Request, res: Response) => {
   try {
-    const userId = (req as any).user._id;
-    
-    const total = await Notification.countDocuments({ userId });
-    const unread = await Notification.countDocuments({ userId, isRead: false });
-    const read = total - unread;
-    
     res.json({
       success: true,
       data: {
-        total,
-        unread,
-        read,
-        unreadPercentage: total > 0 ? Math.round((unread / total) * 100) : 0
+        totalSubscriptions: subscriptions.length,
+        // En una implementación real, aquí se incluirían más estadísticas
       }
     });
-  } catch (error) {
-    logger.error('Error al obtener estadísticas de notificaciones', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error al obtener estadísticas de notificaciones'
+  } catch (error: any) {
+    logger.error('Error al obtener estadísticas de notificaciones:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error al obtener estadísticas de notificaciones',
+      error: error.message
     });
-  }
-};
-
-// Función para enviar recordatorios automáticos (simulado)
-export const sendReminderNotifications = async () => {
-  try {
-    const now = new Date();
-    const hour = now.getHours();
-    
-    // Recordatorios según la hora del día
-    let title = '';
-    let message = '';
-    
-    if (hour === 8) {
-      title = '⏰ Recordatorio de Desayuno';
-      message = 'No olvides registrar tu desayuno y nivel de glucosa';
-    } else if (hour === 13) {
-      title = '⏰ Recordatorio de Almuerzo';
-      message = 'Es hora de registrar tu almuerzo y nivel de glucosa';
-    } else if (hour === 19) {
-      title = '⏰ Recordatorio de Cena';
-      message = 'No olvides registrar tu cena y nivel de glucosa';
-    } else if (hour === 21) {
-      title = '💊 Recordatorio de Medicación';
-      message = '¿Tomaste tu medicación hoy? Registra tu nivel de glucosa';
-    }
-    
-    if (title && message) {
-      await sendPersonalizedNotification('all', title, message);
-    }
-  } catch (error) {
-    logger.error('Error al enviar recordatorios automáticos', error);
   }
 };

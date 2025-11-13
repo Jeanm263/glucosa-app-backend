@@ -1,7 +1,7 @@
 import app from './app';
 import dotenv from 'dotenv';
 import { connectDB } from './config/db';
-import redisClient from './config/redis';
+// import redisClient from './config/redis'; // Comentado porque no se usa directamente
 
 // Importar modelo de alimentos para inicializar datos
 import Food from './models/food.model';

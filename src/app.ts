@@ -1,8 +1,8 @@
 // src/app.ts
 import express from 'express';
 import cors from 'cors';
-import mongoose from 'mongoose';
 import dotenv from 'dotenv';
+// import mongoose from 'mongoose'; // Comentado porque no se usa directamente
 import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
@@ -23,7 +23,7 @@ import glucoseRoutes from './routes/glucose.router';
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 4000;
+// const PORT = process.env.PORT || 4000; // Comentado porque no se usa directamente
 
 // Configuración de seguridad
 app.use(helmet());

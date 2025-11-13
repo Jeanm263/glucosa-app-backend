@@ -7,7 +7,7 @@
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "lint": "eslint . --ext .ts,.js",
+    "lint": "eslint src/**/*.ts --fix",
     "test": "jest",
     "seed": "ts-node src/scripts/seed.ts"
   },
@@ -51,10 +51,12 @@
     "@types/node": "^24.9.2",
     "@types/redis": "^4.0.10",
     "@types/web-push": "^3.6.4",
+    "eslint": "^9.39.1",
     "jest": "^30.2.0",
     "supertest": "^7.1.4",
     "ts-jest": "^29.4.5",
     "ts-node-dev": "^2.0.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.23.0"
   }
 }

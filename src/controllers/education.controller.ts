@@ -1,148 +1,90 @@
 import { Request, Response } from 'express';
-import Education, { IEducation } from '../models/education.model';
+// import { IEducation } from '../models/education.model'; // Comentado porque no se usa directamente
+import Education from '../models/education.model';
+import logger from '../utils/logger';
 
+// Obtener todas las entradas educativas
 export const getAllEducation = async (req: Request, res: Response) => {
   try {
-    const { level, search } = req.query;
-    
-    // Construir filtro
-    const filter: any = {};
-    
-    if (level && level !== 'todos') {
-      filter.level = level;
-    }
-    
-    if (search) {
-      filter.$or = [
-        { title: { $regex: search, $options: 'i' } },
-        { tags: { $regex: search, $options: 'i' } }
-      ];
-    }
-    
-    const education = await Education.find(filter).sort({ title: 1 });
-    
-    res.json({
-      success: true,
-      count: education.length,
-      data: education
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Error al obtener el contenido educativo',
-      error: error instanceof Error ? error.message : 'Error desconocido'
-    });
+    const educationEntries = await Education.find().sort({ category: 1, level: 1 });
+    res.json(educationEntries);
+  } catch (error: any) {
+    logger.error('Error al obtener entradas educativas:', error);
+    res.status(500).json({ message: 'Error al obtener entradas educativas' });
   }
 };
 
+// Obtener entradas educativas por categoría
+export const getEducationByCategory = async (req: Request, res: Response) => {
+  try {
+    const { category } = req.params;
+    const educationEntries = await Education.find({ category }).sort({ level: 1 });
+    res.json(educationEntries);
+  } catch (error: any) {
+    logger.error('Error al obtener entradas educativas por categoría:', error);
+    res.status(500).json({ message: 'Error al obtener entradas educativas por categoría' });
+  }
+};
+
+// Obtener una entrada educativa por ID
 export const getEducationById = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const education = await Education.findById(id);
+    const educationEntry = await Education.findById(id);
     
-    if (!education) {
-      return res.status(404).json({
-        success: false,
-        message: 'Contenido educativo no encontrado'
-      });
+    if (!educationEntry) {
+      return res.status(404).json({ message: 'Entrada educativa no encontrada' });
     }
     
-    res.json({
-      success: true,
-      data: education
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Error al obtener el contenido educativo',
-      error: error instanceof Error ? error.message : 'Error desconocido'
-    });
+    res.json(educationEntry);
+  } catch (error: any) {
+    logger.error('Error al obtener entrada educativa:', error);
+    res.status(500).json({ message: 'Error al obtener entrada educativa' });
   }
 };
 
+// Crear una nueva entrada educativa (solo para administradores)
 export const createEducation = async (req: Request, res: Response) => {
   try {
-    const education = new Education(req.body);
-    await education.save();
-    
-    res.status(201).json({
-      success: true,
-      data: education
-    });
+    const educationEntry = new Education(req.body);
+    const savedEntry = await educationEntry.save();
+    res.status(201).json(savedEntry);
   } catch (error: any) {
-    if (error.name === 'ValidationError') {
-      return res.status(400).json({
-        success: false,
-        message: 'Datos inválidos',
-        error: Object.values(error.errors).map((err: any) => err.message)
-      });
-    }
-    
-    res.status(500).json({
-      success: false,
-      message: 'Error al crear el contenido educativo',
-      error: error instanceof Error ? error.message : 'Error desconocido'
-    });
+    logger.error('Error al crear entrada educativa:', error);
+    res.status(500).json({ message: 'Error al crear entrada educativa' });
   }
 };
 
+// Actualizar una entrada educativa (solo para administradores)
 export const updateEducation = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const education = await Education.findByIdAndUpdate(id, req.body, {
-      new: true,
-      runValidators: true
-    });
+    const updatedEntry = await Education.findByIdAndUpdate(id, req.body, { new: true });
     
-    if (!education) {
-      return res.status(404).json({
-        success: false,
-        message: 'Contenido educativo no encontrado'
-      });
+    if (!updatedEntry) {
+      return res.status(404).json({ message: 'Entrada educativa no encontrada' });
     }
     
-    res.json({
-      success: true,
-      data: education
-    });
+    res.json(updatedEntry);
   } catch (error: any) {
-    if (error.name === 'ValidationError') {
-      return res.status(400).json({
-        success: false,
-        message: 'Datos inválidos',
-        error: Object.values(error.errors).map((err: any) => err.message)
-      });
-    }
-    
-    res.status(500).json({
-      success: false,
-      message: 'Error al actualizar el contenido educativo',
-      error: error instanceof Error ? error.message : 'Error desconocido'
-    });
+    logger.error('Error al actualizar entrada educativa:', error);
+    res.status(500).json({ message: 'Error al actualizar entrada educativa' });
   }
 };
 
+// Eliminar una entrada educativa (solo para administradores)
 export const deleteEducation = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const education = await Education.findByIdAndDelete(id);
+    const deletedEntry = await Education.findByIdAndDelete(id);
     
-    if (!education) {
-      return res.status(404).json({
-        success: false,
-        message: 'Contenido educativo no encontrado'
-      });
+    if (!deletedEntry) {
+      return res.status(404).json({ message: 'Entrada educativa no encontrada' });
     }
     
-    res.json({
-      success: true,
-      message: 'Contenido educativo eliminado correctamente'
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: 'Error al eliminar el contenido educativo',
-      error: error instanceof Error ? error.message : 'Error desconocido'
-    });
+    res.json({ message: 'Entrada educativa eliminada correctamente' });
+  } catch (error: any) {
+    logger.error('Error al eliminar entrada educativa:', error);
+    res.status(500).json({ message: 'Error al eliminar entrada educativa' });
   }
 };

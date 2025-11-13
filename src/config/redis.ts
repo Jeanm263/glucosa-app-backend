@@ -4,27 +4,27 @@ dotenv.config();
 
 // Mock de Redis para desarrollo sin Redis instalado
 const redisClient = {
-  get: (key: string, callback: (err: any, reply: any) => void) => {
+  get: (key: string, _callback: (err: any, reply: any) => void) => {
     console.log('Redis mock - get:', key);
-    callback(null, null);
+    _callback(null, null);
   },
-  set: (key: string, value: string, callback?: (err: any, reply: any) => void) => {
+  set: (key: string, value: string, _callback?: (err: any, reply: any) => void) => {
     console.log('Redis mock - set:', key, value);
-    if (callback) callback(null, 'OK');
+    if (_callback) _callback(null, 'OK');
   },
-  del: (key: string, callback?: (err: any, reply: any) => void) => {
+  del: (key: string, _callback?: (err: any, reply: any) => void) => {
     console.log('Redis mock - del:', key);
-    if (callback) callback(null, 1);
+    if (_callback) _callback(null, 1);
   },
-  exists: (key: string, callback: (err: any, reply: any) => void) => {
+  exists: (key: string, _callback: (err: any, reply: any) => void) => {
     console.log('Redis mock - exists:', key);
-    callback(null, 0);
+    _callback(null, 0);
   },
-  quit: (callback?: (err: any, result: any) => void) => {
+  quit: (_callback?: (err: any, result: any) => void) => {
     console.log('Redis mock - quit');
-    if (callback) callback(null, 'OK');
+    if (_callback) _callback(null, 'OK');
   },
-  on: (event: string, callback: (...args: any[]) => void) => {
+  on: (event: string, _callback: (...args: any[]) => void) => {
     // No hacer nada para eventos
     if (event === 'error') {
       // Silenciar errores de Redis
