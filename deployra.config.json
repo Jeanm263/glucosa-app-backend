@@ -1,0 +1,21 @@
+{
+  "name": "glucosa-app-backend",
+  "description": "Backend para GlucosaApp - Acompañamiento nutricional y educativo para personas con diabetes tipo II",
+  "port": 4000,
+  "healthCheckPath": "/api/health",
+  "healthCheckPort": 4000,
+  "environment": {
+    "NODE_ENV": "production",
+    "PORT": 4000
+  },
+  "build": {
+    "command": "npm install && npm run build"
+  },
+  "start": {
+    "command": "node dist/index.js"
+  },
+  "docker": {
+    "enabled": true,
+    "dockerfile": "Dockerfile"
+  }
+}
