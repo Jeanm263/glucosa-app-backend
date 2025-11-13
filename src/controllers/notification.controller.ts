@@ -9,12 +9,24 @@ let subscriptions: any[] = [];
 const vapidPublicKey = process.env.VAPID_PUBLIC_KEY || '';
 const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY || '';
 
+// Variable para verificar si las claves VAPID son válidas
+let vapidConfigured = false;
+
 if (vapidPublicKey && vapidPrivateKey) {
-  webpush.setVapidDetails(
-    'mailto:admin@glucoguide.com',
-    vapidPublicKey,
-    vapidPrivateKey
-  );
+  try {
+    webpush.setVapidDetails(
+      'mailto:admin@glucoguide.com',
+      vapidPublicKey,
+      vapidPrivateKey
+    );
+    vapidConfigured = true;
+    logger.info('VAPID keys configuradas correctamente');
+  } catch (error) {
+    logger.warn('Error al configurar VAPID keys:', error);
+    vapidConfigured = false;
+  }
+} else {
+  logger.warn('VAPID keys no configuradas. Las notificaciones push no estarán disponibles.');
 }
 
 // Obtener todas las notificaciones
@@ -233,6 +245,14 @@ export const unsubscribeFromNotifications = async (req: Request, res: Response) 
 // Enviar notificación a todos los suscriptores
 export const sendNotificationToAll = async (req: Request, res: Response) => {
   try {
+    // Verificar si las claves VAPID están configuradas
+    if (!vapidConfigured) {
+      return res.status(501).json({ 
+        success: false, 
+        message: 'Notificaciones push no configuradas en este servidor' 
+      });
+    }
+    
     const { title, body, icon, badge } = req.body;
     const payload = JSON.stringify({
       title,
@@ -279,6 +299,14 @@ export const sendNotificationToAll = async (req: Request, res: Response) => {
 // Enviar notificación a un usuario específico
 export const sendNotificationToUser = async (req: Request, res: Response) => {
   try {
+    // Verificar si las claves VAPID están configuradas
+    if (!vapidConfigured) {
+      return res.status(501).json({ 
+        success: false, 
+        message: 'Notificaciones push no configuradas en este servidor' 
+      });
+    }
+    
     const { userId, title, body, icon, badge } = req.body;
     
     // En este ejemplo, enviamos a todas las suscripciones
