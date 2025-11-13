@@ -75,6 +75,27 @@ export const searchFoods = async (req: Request, res: Response) => {
   }
 };
 
+// Obtener categorías de alimentos
+export const getFoodCategories = async (req: Request, res: Response) => {
+  try {
+    // Obtener todas las categorías únicas de alimentos
+    const categories = await Food.distinct('category');
+    
+    res.json({
+      success: true,
+      count: categories.length,
+      data: categories
+    });
+  } catch (error: any) {
+    logger.error('Error al obtener categorías de alimentos:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener categorías de alimentos',
+      error: error.message
+    });
+  }
+};
+
 // Obtener un alimento por ID
 export const getFoodById = async (req: Request, res: Response) => {
   try {

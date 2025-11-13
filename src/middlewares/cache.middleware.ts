@@ -58,3 +58,16 @@ export const cacheResponse = (_ttl: number = 300) => {
     next();
   };
 };
+
+// Middleware para limpiar la caché
+export const clearCacheMiddleware = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    // En el mock de Redis, simulamos limpiar cache
+    logger.info('Simulando limpieza de cache');
+    // No implementamos la limpieza real en el mock
+    next();
+  } catch (error) {
+    logger.error('Error al limpiar cache:', error);
+    next();
+  }
+};

@@ -3,6 +3,57 @@ import { Request, Response } from 'express';
 import FoodLog from '../models/foodLog.model';
 import logger from '../utils/logger';
 
+// Obtener todos los registros de alimentos
+export const getAllFoodLogs = async (req: Request, res: Response) => {
+  try {
+    const { limit = 50 } = req.query;
+    
+    const foodLogs = await FoodLog.find()
+      .sort({ createdAt: -1 })
+      .limit(Number(limit));
+    
+    res.json({
+      success: true,
+      count: foodLogs.length,
+      data: foodLogs
+    });
+  } catch (error: any) {
+    logger.error('Error al obtener registros de alimentos:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener registros de alimentos',
+      error: error.message
+    });
+  }
+};
+
+// Obtener un registro de alimento por ID
+export const getFoodLogById = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const foodLog = await FoodLog.findById(id);
+    
+    if (!foodLog) {
+      return res.status(404).json({
+        success: false,
+        message: 'Registro de alimento no encontrado'
+      });
+    }
+    
+    res.json({
+      success: true,
+      data: foodLog
+    });
+  } catch (error: any) {
+    logger.error('Error al obtener registro de alimento:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener registro de alimento',
+      error: error.message
+    });
+  }
+};
+
 // Obtener todos los registros de alimentos del usuario
 export const getUserFoodLogs = async (req: Request, res: Response) => {
   try {
@@ -133,6 +184,60 @@ export const deleteFoodLog = async (req: Request, res: Response) => {
     res.status(500).json({
       success: false,
       message: 'Error al eliminar registro de alimento',
+      error: error.message
+    });
+  }
+};
+
+// Obtener resumen de nutrición diaria
+export const getDailyNutritionSummary = async (req: Request, res: Response) => {
+  try {
+    const { userId, date } = req.params;
+    
+    // Construir filtro
+    const filter: any = { userId };
+    
+    if (date) {
+      const targetDate = new Date(date);
+      targetDate.setHours(0, 0, 0, 0);
+      const nextDay = new Date(targetDate);
+      nextDay.setDate(nextDay.getDate() + 1);
+      
+      filter.createdAt = {
+        $gte: targetDate,
+        $lt: nextDay
+      };
+    }
+    
+    // Obtener registros de alimentos del día
+    const foodLogs = await FoodLog.find(filter);
+    
+    // Calcular resumen nutricional
+    let totalCarbs = 0;
+    let totalFiber = 0;
+    let totalSugars = 0;
+    
+    foodLogs.forEach(log => {
+      totalCarbs += log.food.carbohydrates || 0;
+      totalFiber += log.food.fiber || 0;
+      totalSugars += log.food.sugars || 0;
+    });
+    
+    res.json({
+      success: true,
+      data: {
+        date: date || new Date().toISOString().split('T')[0],
+        totalCarbs,
+        totalFiber,
+        totalSugars,
+        foodLogs: foodLogs.length
+      }
+    });
+  } catch (error: any) {
+    logger.error('Error al obtener resumen de nutrición diaria:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener resumen de nutrición diaria',
       error: error.message
     });
   }

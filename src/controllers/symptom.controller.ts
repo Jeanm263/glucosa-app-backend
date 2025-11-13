@@ -3,11 +3,63 @@ import { Request, Response } from 'express';
 import Symptom from '../models/symptom.model';
 import logger from '../utils/logger';
 
+// Obtener todos los registros de síntomas
+export const getAllSymptoms = async (req: Request, res: Response) => {
+  try {
+    const { limit = 50 } = req.query;
+    
+    const symptoms = await Symptom.find()
+      .sort({ timestamp: -1 })
+      .limit(Number(limit));
+    
+    res.json({
+      success: true,
+      count: symptoms.length,
+      data: symptoms
+    });
+  } catch (error: any) {
+    logger.error('Error al obtener registros de síntomas:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener registros de síntomas',
+      error: error.message
+    });
+  }
+};
+
+// Obtener un registro de síntoma por ID
+export const getSymptomById = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const symptom = await Symptom.findById(id);
+    
+    if (!symptom) {
+      return res.status(404).json({
+        success: false,
+        message: 'Registro de síntoma no encontrado'
+      });
+    }
+    
+    res.json({
+      success: true,
+      data: symptom
+    });
+  } catch (error: any) {
+    logger.error('Error al obtener registro de síntoma:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener registro de síntoma',
+      error: error.message
+    });
+  }
+};
+
 // Obtener todos los registros de síntomas del usuario
 export const getUserSymptoms = async (req: Request, res: Response) => {
   try {
     const { userId } = req.params;
-    const { date, limit = 50 } = req.query;
+    const query = req.query || {};
+    const { date, limit = 50 } = query;
     
     // Construir filtro
     const filter: any = { userId };
@@ -133,6 +185,62 @@ export const deleteSymptom = async (req: Request, res: Response) => {
     res.status(500).json({
       success: false,
       message: 'Error al eliminar registro de síntoma',
+      error: error.message
+    });
+  }
+};
+
+// Obtener estadísticas de síntomas
+export const getSymptomStats = async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params;
+    const { days = 30 } = req.query;
+    
+    // Calcular la fecha de inicio
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - Number(days));
+    
+    // Obtener registros de síntomas en el rango de fechas
+    const symptoms = await Symptom.find({
+      userId,
+      date: {
+        $gte: startDate
+      }
+    });
+    
+    // Calcular estadísticas
+    const symptomCounts: { [key: string]: number } = {};
+    
+    symptoms.forEach(symptom => {
+      // Iterar sobre el array de síntomas
+      symptom.symptoms.forEach(symptomItem => {
+        const symptomType = symptomItem.type;
+        if (symptomType) {
+          if (symptomCounts[symptomType]) {
+            symptomCounts[symptomType]++;
+          } else {
+            symptomCounts[symptomType] = 1;
+          }
+        }
+      });
+    });
+    
+    res.json({
+      success: true,
+      data: {
+        totalSymptoms: symptoms.length,
+        symptomCounts,
+        dateRange: {
+          start: startDate,
+          end: new Date()
+        }
+      }
+    });
+  } catch (error: any) {
+    logger.error('Error al obtener estadísticas de síntomas:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener estadísticas de síntomas',
       error: error.message
     });
   }

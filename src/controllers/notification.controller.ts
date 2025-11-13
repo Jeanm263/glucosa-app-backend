@@ -3,7 +3,6 @@ import webpush from 'web-push';
 import logger from '../utils/logger';
 
 // Almacenamiento en memoria para suscripciones (en producción usar base de datos)
- 
 let subscriptions: any[] = [];
 
 // Configurar VAPID keys
@@ -17,6 +16,165 @@ if (vapidPublicKey && vapidPrivateKey) {
     vapidPrivateKey
   );
 }
+
+// Obtener todas las notificaciones
+export const getAllNotifications = async (req: Request, res: Response) => {
+  try {
+    // En una implementación real, esto obtendría notificaciones de una base de datos
+    res.json({
+      success: true,
+      message: 'Funcionalidad no implementada en esta versión'
+    });
+  } catch (error: any) {
+    logger.error('Error al obtener notificaciones:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error al obtener notificaciones',
+      error: error.message
+    });
+  }
+};
+
+// Obtener una notificación por ID
+export const getNotificationById = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    // En una implementación real, esto obtendría una notificación específica de una base de datos
+    res.json({
+      success: true,
+      message: `Funcionalidad no implementada para notificación con ID: ${id}`
+    });
+  } catch (error: any) {
+    logger.error('Error al obtener notificación:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error al obtener notificación',
+      error: error.message
+    });
+  }
+};
+
+// Crear una notificación
+export const createNotification = async (req: Request, res: Response) => {
+  try {
+    // En una implementación real, esto crearía una notificación en una base de datos
+    res.status(201).json({
+      success: true,
+      message: 'Funcionalidad no implementada en esta versión'
+    });
+  } catch (error: any) {
+    logger.error('Error al crear notificación:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error al crear notificación',
+      error: error.message
+    });
+  }
+};
+
+// Actualizar una notificación
+export const updateNotification = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    // En una implementación real, esto actualizaría una notificación en una base de datos
+    res.json({
+      success: true,
+      message: `Funcionalidad no implementada para actualizar notificación con ID: ${id}`
+    });
+  } catch (error: any) {
+    logger.error('Error al actualizar notificación:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error al actualizar notificación',
+      error: error.message
+    });
+  }
+};
+
+// Eliminar una notificación
+export const deleteNotification = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    // En una implementación real, esto eliminaría una notificación de una base de datos
+    res.json({
+      success: true,
+      message: `Funcionalidad no implementada para eliminar notificación con ID: ${id}`
+    });
+  } catch (error: any) {
+    logger.error('Error al eliminar notificación:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error al eliminar notificación',
+      error: error.message
+    });
+  }
+};
+
+// Marcar notificación como leída
+export const markAsRead = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    // En una implementación real, esto marcaría una notificación como leída en una base de datos
+    res.json({
+      success: true,
+      message: `Funcionalidad no implementada para marcar notificación con ID: ${id} como leída`
+    });
+  } catch (error: any) {
+    logger.error('Error al marcar notificación como leída:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error al marcar notificación como leída',
+      error: error.message
+    });
+  }
+};
+
+// Marcar todas las notificaciones como leídas
+export const markAllAsRead = async (req: Request, res: Response) => {
+  try {
+    // En una implementación real, esto marcaría todas las notificaciones como leídas en una base de datos
+    res.json({
+      success: true,
+      message: 'Funcionalidad no implementada en esta versión'
+    });
+  } catch (error: any) {
+    logger.error('Error al marcar todas las notificaciones como leídas:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error al marcar todas las notificaciones como leídas',
+      error: error.message
+    });
+  }
+};
+
+// Suscribir a notificaciones push
+export const subscribeToPush = async (req: Request, res: Response) => {
+  try {
+    const subscription = req.body;
+    
+    // Verificar si la suscripción ya existe
+    const exists = subscriptions.some((sub: any) => 
+      sub.endpoint === subscription.endpoint
+    );
+    
+    if (!exists) {
+      subscriptions.push(subscription);
+      logger.info('Nueva suscripción añadida', { endpoint: subscription.endpoint });
+    }
+    
+    res.status(201).json({ 
+      success: true, 
+      message: 'Suscripción añadida correctamente' 
+    });
+  } catch (error: any) {
+    logger.error('Error al suscribir a notificaciones:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Error al suscribir a notificaciones',
+      error: error.message
+    });
+  }
+};
 
 // Suscribir a notificaciones
 export const subscribeToNotifications = async (req: Request, res: Response) => {
