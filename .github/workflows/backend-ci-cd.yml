@@ -1,0 +1,77 @@
+name: Backend CI/CD Pipeline
+
+on:
+  push:
+    branches: [ master, develop ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  # Job de CI para el backend
+  backend-ci:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '20'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Run linting
+      run: npm run lint
+    
+    - name: Run tests
+      run: npm run test
+    
+    - name: Build application
+      run: npm run build
+
+  # Job de CD para despliegue en staging
+  deploy-staging:
+    needs: backend-ci
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop'
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Deploy to staging environment
+      run: |
+        echo "Deploying to staging environment..."
+        # Aquí irían los comandos para desplegar en staging
+        # Por ejemplo, usando Docker, Kubernetes, etc.
+    
+    - name: Run integration tests
+      run: |
+        echo "Running integration tests on staging..."
+        # Aquí irían los tests de integración en staging
+
+  # Job de CD para despliegue en producción
+  deploy-production:
+    needs: backend-ci
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
+    
+    environment:
+      name: production
+      url: https://yourdomain.com
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Deploy to production environment
+      run: |
+        echo "Deploying to production environment..."
+        # Aquí irían los comandos para desplegar en producción
+        # Por ejemplo, usando Docker, Kubernetes, etc.
+    
+    - name: Run health checks
+      run: |
+        echo "Running health checks on production..."
+        # Aquí irían los checks de salud en producción
