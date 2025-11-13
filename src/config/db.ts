@@ -1,12 +1,12 @@
 import mongoose from 'mongoose';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 export const connectDB = async () => {
   try {
-    // Usar una base de datos en memoria para desarrollo
-    const conn = await mongoose.connect('mongodb://localhost:27017/glucoguide', {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    } as any);
+    const mongoUri = process.env.MONGO_URI || 'mongodb://localhost:27017/glucoguide';
+    const conn = await mongoose.connect(mongoUri);
     console.log(`✅ MongoDB conectado: ${conn.connection.host}`);
     
     // Manejar desconexión
@@ -17,9 +17,6 @@ export const connectDB = async () => {
     });
   } catch (error) {
     console.error('❌ Error al conectar a MongoDB:', error);
-    // Si no se puede conectar, usar base de datos en memoria
-    console.log('🔧 Usando base de datos en memoria para desarrollo');
-    const conn = await mongoose.connect('mongodb://localhost:27017/glucoguide');
-    console.log(`✅ MongoDB conectado: ${conn.connection.host}`);
+    process.exit(1);
   }
 };

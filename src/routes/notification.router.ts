@@ -6,9 +6,9 @@ import {
   updateNotification,
   deleteNotification,
   markAsRead,
-  markAsUnread,
-  getUnreadNotifications,
-  markAllAsRead
+  markAllAsRead,
+  subscribeToPush,
+  sendNotificationToAll
 } from '../controllers/notification.controller';
 import { authenticateToken } from '../middlewares/auth.middleware';
 
@@ -16,13 +16,15 @@ const router = Router();
 
 // Rutas protegidas (requieren autenticación)
 router.get('/', authenticateToken, getAllNotifications);
-router.get('/unread', authenticateToken, getUnreadNotifications);
 router.get('/:id', authenticateToken, getNotificationById);
 router.post('/', authenticateToken, createNotification);
 router.put('/:id', authenticateToken, updateNotification);
 router.delete('/:id', authenticateToken, deleteNotification);
 router.patch('/:id/read', authenticateToken, markAsRead);
-router.patch('/:id/unread', authenticateToken, markAsUnread);
 router.patch('/read-all', authenticateToken, markAllAsRead);
+
+// Rutas para notificaciones push
+router.post('/subscribe', authenticateToken, subscribeToPush);
+router.post('/send', authenticateToken, sendNotificationToAll);
 
 export default router;
