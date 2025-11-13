@@ -6,7 +6,8 @@ import logger from '../utils/logger';
 // Obtener todos los alimentos con filtros opcionales
 export const getAllFoods = async (req: Request, res: Response) => {
   try {
-    const { category, search } = req.query;
+    const query = req.query || {};
+    const { category, search } = query;
     
     // Construir filtro
     const filter: any = {};
@@ -17,9 +18,9 @@ export const getAllFoods = async (req: Request, res: Response) => {
     
     if (search) {
       filter.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } },
-        { tags: { $regex: search, $options: 'i' } }
+        { name: { $regex: search as string, $options: 'i' } },
+        { description: { $regex: search as string, $options: 'i' } },
+        { tags: { $regex: search as string, $options: 'i' } }
       ];
     }
     
@@ -35,6 +36,40 @@ export const getAllFoods = async (req: Request, res: Response) => {
     res.status(500).json({
       success: false,
       message: 'Error al obtener alimentos',
+      error: error.message
+    });
+  }
+};
+
+// Buscar alimentos por nombre o categoría
+export const searchFoods = async (req: Request, res: Response) => {
+  try {
+    const query = req.query || {};
+    const { query: searchQuery, category } = query;
+    
+    // Construir filtro
+    const filter: any = {};
+    
+    if (searchQuery) {
+      filter.name = { $regex: searchQuery as string, $options: 'i' };
+    }
+    
+    if (category) {
+      filter.category = category;
+    }
+    
+    const foods = await Food.find(filter).sort({ name: 1 });
+    
+    res.json({
+      success: true,
+      count: foods.length,
+      data: foods
+    });
+  } catch (error: any) {
+    logger.error('Error al buscar alimentos:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al buscar alimentos',
       error: error.message
     });
   }
