@@ -151,8 +151,8 @@ export const login = async (req: Request, res: Response) => {
     // Enviar token en cookie
     res.cookie('token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      secure: process.env.NODE_ENV === 'production', // Solo HTTPS en producción
+      sameSite: 'none', // Cambiado de 'strict' a 'none' para mejor compatibilidad con apps móviles
       maxAge: 7 * 24 * 60 * 60 * 1000
     });
 
