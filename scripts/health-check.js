@@ -1,3 +1,4 @@
+/* eslint-disable */
 const http = require('http');
 
 // Configuración
@@ -10,12 +11,11 @@ const options = {
   port: PORT,
   path: HEALTH_CHECK_PATH,
   method: 'GET',
-  timeout: 5000
+  timeout: 10000 // 10 segundos de timeout
 };
 
 const req = http.request(options, (res) => {
   console.log(`STATUS: ${res.statusCode}`);
-  console.log(`HEADERS: ${JSON.stringify(res.headers)}`);
   
   if (res.statusCode === 200) {
     console.log('✅ Health check PASSED');
@@ -32,9 +32,12 @@ req.on('error', (e) => {
 });
 
 req.on('timeout', () => {
-  console.error('❌ Request timeout');
+  console.error('❌ Request timeout - Server might be starting up');
   req.destroy();
   process.exit(1);
 });
+
+// Establecer timeout
+req.setTimeout(10000);
 
 req.end();

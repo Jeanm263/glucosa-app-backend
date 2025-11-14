@@ -24,6 +24,19 @@ COPY --from=builder /app/dist ./dist
 # Copiamos vistas/otros assets si los hay (opcional)
 # COPY --from=builder /app/public ./public
 
+# Crear usuario no root para seguridad
+RUN addgroup -g 1001 -S nodejs
+RUN adduser -S nextjs -u 1001
+
+# Cambiar permisos
+RUN chown -R nextjs:nodejs /app
+USER nextjs
+
 ENV NODE_ENV=production
 EXPOSE 4000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:4000/api/health || exit 1
+
 CMD ["node", "dist/index.js"]

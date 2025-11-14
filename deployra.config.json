@@ -17,5 +17,7 @@
   "docker": {
     "enabled": true,
     "dockerfile": "Dockerfile"
-  }
+  },
+  "restartPolicy": "always",
+  "maxRestarts": 10
 }

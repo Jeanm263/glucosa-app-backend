@@ -40,7 +40,9 @@ El archivo `deployra.config.json` contiene la configuración necesaria para el d
   "docker": {
     "enabled": true,
     "dockerfile": "Dockerfile"
-  }
+  },
+  "restartPolicy": "always",
+  "maxRestarts": 10
 }
 ```
 
@@ -78,6 +80,22 @@ El archivo `deployra.config.json` contiene la configuración necesaria para el d
    - Asegúrate de que `PORT` esté establecido en 4000
    - Verifica que `NODE_ENV` esté establecido en `production`
    - Confirma que `MONGO_URI` tenga la cadena de conexión correcta
+
+### Problemas comunes de despliegue:
+
+1. **Tiempo de espera del health check**:
+   - La primera vez que se despliega, puede tardar varios minutos en iniciar completamente
+   - El sistema de salud tiene un timeout de 10 segundos, pero el servidor puede tardar más en iniciarse
+   - Espera al menos 5 minutos antes de considerar que hay un problema
+
+2. **Errores de conexión a MongoDB**:
+   - Verifica que la cadena de conexión sea correcta
+   - Asegúrate de que la IP de Deployra esté en la lista blanca de MongoDB Atlas
+   - Confirma que las credenciales sean correctas
+
+3. **Errores en la construcción de Docker**:
+   - Verifica que todas las dependencias estén en package.json
+   - Asegúrate de que no haya errores de sintaxis en el código TypeScript
 
 ### Comandos Útiles
 
