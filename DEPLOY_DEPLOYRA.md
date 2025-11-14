@@ -3,11 +3,11 @@
 ## Configuración Requerida
 
 ### Variables de Entorno
-```
-MONGO_URI=mongodb://localhost:27017/glucoguide
+```env
+MONGO_URI=mongodb+srv://glucoguideuser:0763641029@cluster0.ay6rjni.mongodb.net/glucoguide?retryWrites=true&w=majority
 JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
-VAPID_PUBLIC_KEY=your-public-vapid-key
-VAPID_PRIVATE_KEY=your-private-vapid-key
+VAPID_PUBLIC_KEY=BBoY4t8Xad26ePZ3qNfGITT9HO8mCU6FXoHjT1EH9CzpSGE0E0XvHeYfeAlVKhV7xc0lTFWK6nhP7JNiB0zw4lM
+VAPID_PRIVATE_KEY=9cRi4nvIDd77lTOxeJPc0Tcmm22ScxuhIhxtZYDfWC8
 PORT=4000
 NODE_ENV=production
 ```
@@ -47,16 +47,20 @@ El archivo `deployra.config.json` contiene la configuración necesaria para el d
 ## Pasos para el Despliegue
 
 1. **Configurar Variables de Entorno** en Deployra:
-   - Asegúrate de establecer todas las variables de entorno requeridas
+   - Ve a la sección de variables de entorno en Deployra
+   - Agrega todas las variables de entorno requeridas con los valores correctos
+   - Asegúrate de usar la cadena de conexión MongoDB correcta
 
 2. **Verificar el Dockerfile**:
    - El proyecto incluye un Dockerfile optimizado para producción
+   - No es necesario hacer cambios en el Dockerfile
 
 3. **Configurar el Punto Final de Salud**:
    - Asegúrate de que Deployra esté configurado para verificar `/api/health` en el puerto 4000
 
 4. **Desplegar**:
    - Sigue el flujo de despliegue estándar de Deployra
+   - El sistema usará automáticamente el Dockerfile para construir la imagen
 
 ## Solución de Problemas
 
@@ -73,6 +77,7 @@ El archivo `deployra.config.json` contiene la configuración necesaria para el d
 3. **Verifica las variables de entorno**:
    - Asegúrate de que `PORT` esté establecido en 4000
    - Verifica que `NODE_ENV` esté establecido en `production`
+   - Confirma que `MONGO_URI` tenga la cadena de conexión correcta
 
 ### Comandos Útiles
 
@@ -86,3 +91,20 @@ npm run build
 # Iniciar el servidor
 npm start
 ```
+
+## Configuración del Frontend
+
+Después de desplegar el backend, actualiza la URL del API en el frontend:
+
+1. En el archivo `.env.production` del frontend, actualiza:
+   ```
+   VITE_API_URL=https://tu-url-de-deployra.com/api
+   ```
+
+2. Reconstruye el frontend con esta configuración
+
+## Actualización de Variables de Entorno
+
+Puedes actualizar las variables de entorno en Deployra sin necesidad de hacer un nuevo git push:
+- Los cambios en variables de entorno reinician automáticamente el servicio
+- Solo necesitas hacer git push si hay cambios en el código
