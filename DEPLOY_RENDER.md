@@ -5,12 +5,13 @@
 ### Variables de Entorno
 ```env
 MONGO_URI=mongodb+srv://glucoguideuser:0763641029@cluster0.ay6rjni.mongodb.net/glucoguide?retryWrites=true&w=majority
-JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
+JWT_SECRET=una_clave_secreta_muy_segura_que_debes_cambiar
 VAPID_PUBLIC_KEY=BBoY4t8Xad26ePZ3qNfGITT9HO8mCU6FXoHjT1EH9CzpSGE0E0XvHeYfeAlVKhV7xc0lTFWK6nhP7JNiB0zw4lM
 VAPID_PRIVATE_KEY=9cRi4nvIDd77lTOxeJPc0Tcmm22ScxuhIhxtZYDfWC8
 PORT=4000
 HOST=0.0.0.0
 NODE_ENV=production
+FRONTEND_URL=https://tu-dominio-de-frontend-en-render.com
 ```
 
 ### Punto Final de Salud (Health Check)
@@ -31,97 +32,52 @@ NODE_ENV=production
    - Selecciona el repositorio `glucosa-app-backend`
 
 3. **Configurar el servicio**:
-   - **Name**: glucosa-app-backend
-   - **Environment**: Node
+   - **Name**: `glucosa-app-backend`
+   - **Environment**: `Node`
    - **Build Command**: `npm install && npm run build`
    - **Start Command**: `node dist/index.js`
-   - **Instance Type**: Free (para desarrollo) o Standard (para producción)
+   - **Instance Type**: `Free` (para desarrollo) o `Standard` (para producción)
 
 4. **Configurar Variables de Entorno**:
-   - Ve a la sección "Advanced" en la configuración
-   - Agrega todas las variables de entorno requeridas
+   - En la sección "Advanced" de la configuración, agrega todas las variables de entorno listadas arriba
+   - Asegúrate de reemplazar `https://tu-dominio-de-frontend-en-render.com` con la URL real de tu frontend en Render
 
-5. **IMPORTANTE - Configurar el método de construcción**:
-   - En "Settings" → "Build & Deploy"
-   - Cambia "Build Mode" de "Docker" a "Node"
-   - Esto hará que Render use los comandos de construcción en lugar de buscar el Dockerfile
+5. **Configurar el Health Check**:
+   - **Path**: `/api/health`
+   - **Port**: `4000`
 
 6. **Desplegar**:
    - Haz clic en "Create Web Service"
-   - Render construirá y desplegará automáticamente tu aplicación
+   - Espera a que termine el despliegue (puede tardar varios minutos)
 
-## Solución de Problemas
+## Solución de Problemas Comunes
 
-### Error: "failed to solve: failed to read dockerfile"
-
-1. **Cambiar el método de construcción**:
-   - Ve a "Settings" → "Build & Deploy"
-   - Cambia "Build Mode" de "Docker" a "Node"
-   - Esto evita que Render busque el Dockerfile
-
-2. **Verificar la estructura del proyecto**:
-   - Asegúrate de que package.json esté en la raíz del repositorio
-   - Verifica que no haya estructuras de carpetas anidadas
-
-### Error: "Service Unavailable" o "Application Error"
+### Error 401 Unauthorized
+Si recibes errores 401 al acceder a endpoints protegidos:
 
 1. **Verifica las variables de entorno**:
-   - Asegúrate de que `MONGO_URI` tenga la cadena de conexión correcta
-   - Verifica que `JWT_SECRET` esté configurado
-   - Confirma que `PORT` esté establecido en `4000`
+   - Asegúrate de que `JWT_SECRET` esté configurado correctamente
+   - Verifica que `FRONTEND_URL` apunte al dominio correcto
 
-2. **Verifica la conexión a MongoDB**:
-   - Asegúrate de que la IP de Render esté en la lista blanca de MongoDB Atlas
-   - Puedes agregar `0.0.0.0/0` temporalmente para pruebas
+2. **Verifica CORS**:
+   - Asegúrate de que el dominio del frontend esté en la lista de orígenes permitidos en el backend
 
-3. **Revisa los logs**:
-   - En el dashboard de Render, ve a la pestaña "Logs"
-   - Busca errores relacionados con la conexión a la base de datos o inicialización
+3. **Verifica las cookies**:
+   - Confirma que el frontend esté enviando cookies con las solicitudes (`withCredentials: true`)
 
-### Tiempo de espera del health check
+### Problemas de Conexión a MongoDB
+Si el servicio no puede conectarse a MongoDB:
 
-- La primera vez que se despliega, puede tardar varios minutos en iniciar completamente
-- El health check de Render espera una respuesta en el puerto configurado
-- Si el servidor no responde en 5 minutos, el despliegue fallará
+1. **Verifica la cadena de conexión**:
+   - Asegúrate de que `MONGO_URI` esté configurada correctamente
+   - Verifica que las credenciales sean válidas
 
-### Problemas comunes:
+2. **Verifica la IP en la lista blanca**:
+   - En MongoDB Atlas, asegúrate de que la IP de Render esté en la lista blanca
+   - Puedes usar `0.0.0.0/0` temporalmente para pruebas (no recomendado para producción)
 
-1. **Puerto incorrecto**:
-   - Asegúrate de que la aplicación escuche en el puerto especificado en la variable de entorno `PORT`
-   - Render inyecta el puerto en la variable de entorno `PORT`
+## Monitoreo
 
-2. **Dirección de host**:
-   - La aplicación debe escuchar en `0.0.0.0` en lugar de `localhost` o `127.0.0.1`
-
-3. **Variables de entorno faltantes**:
-   - Todas las variables de entorno sensibles deben configurarse en el dashboard de Render
-
-## Comandos Útiles
-
-```bash
-# Verificar el estado de salud localmente
-npm run health-check
-
-# Construir el proyecto
-npm run build
-
-# Iniciar el servidor localmente con configuración de Render
-PORT=4000 HOST=0.0.0.0 npm start
-```
-
-## Configuración del Frontend
-
-Después de desplegar el backend, actualiza la URL del API en el frontend:
-
-1. En el archivo `.env.production` del frontend, actualiza:
-   ```
-   VITE_API_URL=https://tu-app-en-render.onrender.com/api
-   ```
-
-2. Reconstruye el frontend con esta configuración
-
-## Escalabilidad
-
-- Render automáticamente escala tu aplicación según la demanda
-- Para producción, considera usar un plan de pago para mejor rendimiento
-- Puedes configurar auto scaling y CDN según tus necesidades
+- Verifica los logs en el dashboard de Render para ver mensajes de error detallados
+- Usa el endpoint `/api/health` para verificar que el servicio esté funcionando correctamente
+- Usa el endpoint `/api/metrics` para monitorear el rendimiento

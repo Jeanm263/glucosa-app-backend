@@ -41,7 +41,27 @@ app.use(limiter);
 
 // Configuración de CORS para permitir solicitudes del frontend
 const corsOptions = {
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: function (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
+    // Lista de orígenes permitidos
+    const allowedOrigins = [
+      'http://localhost:5173',
+      'http://localhost:5174',
+      'https://tu-dominio-de-frontend-en-render.com' // Reemplaza con tu dominio real en Render
+    ];
+    
+    // Permitir solicitudes sin origen (como mobile apps o curl)
+    if (!origin) {
+      callback(null, true);
+      return;
+    }
+    
+    // Permitir si el origen está en la lista de permitidos
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('No permitido por CORS'));
+    }
+  },
   credentials: true,
 };
 
