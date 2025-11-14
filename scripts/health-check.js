@@ -3,15 +3,16 @@ const http = require('http');
 
 // Configuración
 const PORT = process.env.PORT || 4000;
+const HOST = process.env.HOST || 'localhost';
 const HEALTH_CHECK_PATH = '/api/health';
 
 // Realizar la solicitud de verificación de salud
 const options = {
-  hostname: 'localhost',
+  hostname: HOST,
   port: PORT,
   path: HEALTH_CHECK_PATH,
   method: 'GET',
-  timeout: 10000 // 10 segundos de timeout
+  timeout: 15000 // 15 segundos de timeout
 };
 
 const req = http.request(options, (res) => {
@@ -38,6 +39,6 @@ req.on('timeout', () => {
 });
 
 // Establecer timeout
-req.setTimeout(10000);
+req.setTimeout(15000);
 
 req.end();

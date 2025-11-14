@@ -14,6 +14,8 @@ import { INITIAL_EDUCATION } from './constants/educationData';
 dotenv.config();
 
 const PORT = process.env.PORT || 4000;
+// En entornos de contenedor, escuchar en todas las interfaces
+const HOST = process.env.HOST || '0.0.0.0';
 
 // Función para inicializar datos de alimentos
 const initializeFoodData = async () => {
@@ -55,12 +57,13 @@ connectDB().then(async () => {
     await initializeFoodData();
     await initializeEducationData();
     
-    const server = app.listen(PORT, () => {
+    const server = app.listen(PORT, HOST, () => {
       console.log('='.repeat(50));
       console.log(`🚀 SERVIDOR INICIADO CORRECTAMENTE`);
+      console.log(`📍 Host: ${HOST}`);
       console.log(`📍 Puerto: ${PORT}`);
-      console.log(`🌐 URL: http://localhost:${PORT}`);
-      console.log(`✅ Health: http://localhost:${PORT}/api/health`);
+      console.log(`🌐 URL: http://${HOST}:${PORT}`);
+      console.log(`✅ Health: http://${HOST}:${PORT}/api/health`);
       console.log('='.repeat(50));
     });
     

@@ -19,6 +19,9 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci --omit=dev
 
+# Instalar curl para el health check
+RUN apk add --no-cache curl
+
 # Copiamos archivos generados por el builder
 COPY --from=builder /app/dist ./dist
 # Copiamos vistas/otros assets si los hay (opcional)
@@ -35,8 +38,8 @@ USER nextjs
 ENV NODE_ENV=production
 EXPOSE 4000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:4000/api/health || exit 1
+# Health check más robusto
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:4000/api/health || exit 1
 
 CMD ["node", "dist/index.js"]
