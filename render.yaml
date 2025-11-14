@@ -3,6 +3,8 @@ services:
     name: glucosa-app-backend
     env: node
     plan: free
+    # Especificar el directorio raíz correcto
+    rootDir: .
     buildCommand: npm install && npm run build
     startCommand: node dist/index.js
     envVars:
