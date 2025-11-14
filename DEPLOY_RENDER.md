@@ -41,11 +41,27 @@ NODE_ENV=production
    - Ve a la sección "Advanced" en la configuración
    - Agrega todas las variables de entorno requeridas
 
-5. **Desplegar**:
+5. **IMPORTANTE - Configurar el método de construcción**:
+   - En "Settings" → "Build & Deploy"
+   - Cambia "Build Mode" de "Docker" a "Node"
+   - Esto hará que Render use los comandos de construcción en lugar de buscar el Dockerfile
+
+6. **Desplegar**:
    - Haz clic en "Create Web Service"
    - Render construirá y desplegará automáticamente tu aplicación
 
 ## Solución de Problemas
+
+### Error: "failed to solve: failed to read dockerfile"
+
+1. **Cambiar el método de construcción**:
+   - Ve a "Settings" → "Build & Deploy"
+   - Cambia "Build Mode" de "Docker" a "Node"
+   - Esto evita que Render busque el Dockerfile
+
+2. **Verificar la estructura del proyecto**:
+   - Asegúrate de que package.json esté en la raíz del repositorio
+   - Verifica que no haya estructuras de carpetas anidadas
 
 ### Error: "Service Unavailable" o "Application Error"
 
