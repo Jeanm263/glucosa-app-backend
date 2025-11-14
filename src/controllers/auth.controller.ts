@@ -77,6 +77,37 @@ export const register = async (req: Request, res: Response) => {
   }
 };
 
+export const logout = async (req: Request, res: Response) => {
+  try {
+    logger.info('Cerrando sesión de usuario', {
+      userId: req.user?._id,
+      ip: req.ip
+    });
+    
+    // Eliminar la cookie de token
+    res.clearCookie('token', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'none'
+    });
+    
+    logger.info('Sesión cerrada exitosamente', {
+      userId: req.user?._id,
+      ip: req.ip
+    });
+    
+    res.json({ success: true, message: 'Sesión cerrada exitosamente' });
+  } catch (error) {
+    logger.error('Error al cerrar sesión', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      userId: req.user?._id,
+      ip: req.ip
+    });
+    res.status(500).json({ message: 'Error al cerrar sesión' });
+  }
+};
+
 export const checkAuth = async (req: Request, res: Response) => {
   try {
     if (req.user) {

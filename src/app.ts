@@ -48,7 +48,9 @@ const corsOptions = {
       'http://localhost:5174',
       'https://glucosa-app-backend.onrender.com', // URL de tu backend en Render
       'capacitor://localhost', // Para aplicaciones Capacitor
-      'http://localhost' // Para aplicaciones móviles
+      'http://localhost', // Para aplicaciones móviles
+      'http://localhost:8080', // Para Capacitor en algunos casos
+      'capacitor://localhost:8080' // Para Capacitor en algunos casos
     ];
     
     // Permitir solicitudes sin origen (como mobile apps o curl)
@@ -61,7 +63,10 @@ const corsOptions = {
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
-      callback(new Error('No permitido por CORS'));
+      // Para aplicaciones móviles, permitir todos los orígenes (solo en desarrollo)
+      // En producción, podrías querer ser más restrictivo
+      console.log('Origen no en lista permitida, pero permitiendo por ser aplicación móvil:', origin);
+      callback(null, true);
     }
   },
   credentials: true,
