@@ -13,9 +13,15 @@ import { INITIAL_EDUCATION } from './constants/educationData';
 
 dotenv.config();
 
-const PORT = process.env.PORT || 4000;
-// En entornos de contenedor, escuchar en todas las interfaces
+// Convertir el puerto a número asegurando que sea un valor válido
+const PORT = parseInt(process.env.PORT || '4000', 10);
 const HOST = process.env.HOST || '0.0.0.0';
+
+// Validar que el puerto sea un número válido
+if (isNaN(PORT)) {
+  console.error('❌ Puerto inválido especificado en PORT:', process.env.PORT);
+  process.exit(1);
+}
 
 // Función para inicializar datos de alimentos
 const initializeFoodData = async () => {
