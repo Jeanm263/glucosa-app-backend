@@ -63,15 +63,10 @@ const corsOptions = {
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
-      // En producción, ser más restrictivo
-      if (process.env.NODE_ENV === 'production') {
-        console.log('Origen no permitido en producción:', origin);
-        callback(new Error('Origen no permitido por CORS'));
-      } else {
-        // En desarrollo, permitir todos los orígenes para facilitar el desarrollo
-        console.log('Permitiendo origen en desarrollo:', origin);
-        callback(null, true);
-      }
+      // Para aplicaciones móviles, permitir siempre (solo en producción también)
+      // Esto es necesario para que las aplicaciones Capacitor puedan comunicarse con el backend
+      console.log('Origen no en lista permitida, pero permitiendo por ser aplicación móvil:', origin);
+      callback(null, true);
     }
   },
   credentials: true,
