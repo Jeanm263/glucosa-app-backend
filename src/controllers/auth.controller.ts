@@ -43,7 +43,7 @@ export const register = async (req: Request, res: Response) => {
     res.cookie('token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000 // 7 días
     });
 
@@ -88,7 +88,7 @@ export const logout = async (req: Request, res: Response) => {
     res.clearCookie('token', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'none'
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
     });
     
     logger.info('Sesión cerrada exitosamente', {
@@ -133,16 +133,16 @@ export const checkAuth = async (req: Request, res: Response) => {
       ip: req.ip,
       userAgent: req.get ? req.get('User-Agent') : 'Unknown'
     });
-    // Return 401 without JSON to avoid triggering interceptor
-    return res.status(401).send('No autenticado');
+    // Return 401 with JSON for better frontend handling
+    return res.status(401).json({ message: 'No autenticado' });
   } catch (error) {
     logger.error('Error al verificar autenticación', {
       error: error instanceof Error ? error.message : 'Unknown error',
       stack: error instanceof Error ? error.stack : undefined,
       ip: req.ip
     });
-    // Return 500 without JSON to avoid triggering interceptor
-    return res.status(500).send('Error al verificar autenticación');
+    // Return 500 with JSON for better frontend handling
+    return res.status(500).json({ message: 'Error al verificar autenticación' });
   }
 };
 

@@ -25,8 +25,8 @@ export const authenticateToken = async (
         userAgent: req.get('User-Agent'),
         url: req.originalUrl
       });
-      // Return 401 without JSON to avoid triggering frontend interceptor
-      return res.status(401).send('Acceso no autorizado. Token no proporcionado.');
+      // Return 401 with JSON for better frontend handling
+      return res.status(401).json({ message: 'Acceso no autorizado. Token no proporcionado.' });
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret') as { userId: string };
@@ -38,8 +38,8 @@ export const authenticateToken = async (
         ip: req.ip,
         userAgent: req.get('User-Agent')
       });
-      // Return 401 without JSON to avoid triggering frontend interceptor
-      return res.status(401).send('Usuario no encontrado.');
+      // Return 401 with JSON for better frontend handling
+      return res.status(401).json({ message: 'Usuario no encontrado.' });
     }
 
     req.user = user;
@@ -56,7 +56,7 @@ export const authenticateToken = async (
       ip: req.ip,
       userAgent: req.get('User-Agent')
     });
-    // Return 401 without JSON to avoid triggering frontend interceptor
-    return res.status(401).send('Token inválido o expirado.');
+    // Return 401 with JSON for better frontend handling
+    return res.status(401).json({ message: 'Token inválido o expirado.' });
   }
 };
