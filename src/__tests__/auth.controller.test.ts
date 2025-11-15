@@ -188,7 +188,7 @@ describe('Auth Controller', () => {
       await checkAuth(mockRequest as Request, mockResponse as Response);
 
       expect(mockStatus).toHaveBeenCalledWith(401);
-      expect(mockResponse.send).toHaveBeenCalledWith('No autenticado');
+      expect(mockResponse.json).toHaveBeenCalledWith({ message: 'No autenticado' });
     });
   });
 });
