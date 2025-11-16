@@ -68,14 +68,21 @@ const corsOptions = {
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
-      // En producción, ser más estricto con los orígenes
-      if (process.env.NODE_ENV === 'production') {
-        logger.debug('Origen no permitido en producción: %s', origin);
-        callback(new Error('Origen no permitido por CORS'));
-      } else {
-        // En desarrollo, permitir para facilitar el desarrollo
-        logger.debug('Origen no en lista permitida, pero permitiendo en desarrollo: %s', origin);
+      // Para aplicaciones móviles, siempre permitir (necesario para Capacitor)
+      // Verificar si es una aplicación móvil por el esquema
+      if (origin.startsWith('capacitor://') || origin.startsWith('http://localhost')) {
+        logger.debug('Permitiendo origen móvil: %s', origin);
         callback(null, true);
+      } else {
+        // En producción, ser más estricto con los orígenes
+        if (process.env.NODE_ENV === 'production') {
+          logger.debug('Origen no permitido en producción: %s', origin);
+          callback(new Error('Origen no permitido por CORS'));
+        } else {
+          // En desarrollo, permitir para facilitar el desarrollo
+          logger.debug('Origen no en lista permitida, pero permitiendo en desarrollo: %s', origin);
+          callback(null, true);
+        }
       }
     }
   },

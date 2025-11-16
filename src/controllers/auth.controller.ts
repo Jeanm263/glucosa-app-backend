@@ -88,7 +88,7 @@ export const logout = async (req: Request, res: Response) => {
     res.clearCookie('token', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax'
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
     });
     
     logger.info('Sesión cerrada exitosamente', {
@@ -183,7 +183,7 @@ export const login = async (req: Request, res: Response) => {
     res.cookie('token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production', // Solo HTTPS en producción
-      sameSite: 'lax',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // 'none' para producción con móvil
       maxAge: 7 * 24 * 60 * 60 * 1000
     });
 
