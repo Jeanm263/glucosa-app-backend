@@ -8,6 +8,7 @@ import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import compression from 'compression';
 import { metricsMiddleware, metricsEndpoint } from './middlewares/metrics.middleware';
+import logger from './utils/logger';
 
 // Importar rutas
 import usuarioRoutes from './routes/usuario.router';
@@ -19,6 +20,9 @@ import mealPlanRoutes from './routes/mealPlan.router';
 import notificationRoutes from './routes/notification.router';
 import symptomRoutes from './routes/symptom.router';
 import glucoseRoutes from './routes/glucose.router';
+import analyticsRoutes from './routes/analytics.router';
+import remindersRoutes from './routes/reminders.router';
+import achievementsRoutes from './routes/achievements.router';
 
 dotenv.config();
 
@@ -63,26 +67,31 @@ const corsOptions = {
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
-      // Para aplicaciones móviles, permitir siempre (solo en producción también)
-      // Esto es necesario para que las aplicaciones Capacitor puedan comunicarse con el backend
-      console.log('Origen no en lista permitida, pero permitiendo por ser aplicación móvil:', origin);
-      callback(null, true);
+      // En producción, ser más estricto con los orígenes
+      if (process.env.NODE_ENV === 'production') {
+        logger.debug('Origen no permitido en producción: %s', origin);
+        callback(new Error('Origen no permitido por CORS'));
+      } else {
+        // En desarrollo, permitir para facilitar el desarrollo
+        logger.debug('Origen no en lista permitida, pero permitiendo en desarrollo: %s', origin);
+        callback(null, true);
+      }
     }
   },
   credentials: true,
 };
 
 // Middleware
-console.log('Configurando middlewares...');
+logger.debug('Configurando middlewares...');
 app.use(compression());
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
 app.use(metricsMiddleware);
-console.log('Middlewares configurados');
+logger.debug('Middlewares configurados');
 
 // Rutas
-console.log('Registrando rutas...');
+logger.debug('Registrando rutas...');
 app.use('/api/auth', authRoutes);
 app.use('/api/usuarios', usuarioRoutes);
 app.use('/api/foods', foodRoutes);
@@ -92,11 +101,14 @@ app.use('/api/meal-plans', mealPlanRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/symptoms', symptomRoutes);
 app.use('/api/glucose', glucoseRoutes);
-console.log('Rutas registradas correctamente');
+app.use('/api/analytics', analyticsRoutes);
+app.use('/api/reminders', remindersRoutes);
+app.use('/api/achievements', achievementsRoutes);
+logger.debug('Rutas registradas correctamente');
 
 // Ruta de salud
 app.get('/api/health', (req, res) => {
-  console.log('✅ Health check recibido');
+  logger.info('✅ Health check recibido');
   res.json({ 
     status: 'OK', 
     message: 'Backend funcionando!',
@@ -120,7 +132,10 @@ app.get('/', (req, res) => {
       mealPlans: '/api/meal-plans',
       notifications: '/api/notifications',
       symptoms: '/api/symptoms',
-      glucose: '/api/glucose'
+      glucose: '/api/glucose',
+      analytics: '/api/analytics',
+      reminders: '/api/reminders',
+      achievements: '/api/achievements'
     }
   });
 });
@@ -128,4 +143,4 @@ app.get('/', (req, res) => {
 // Exportar la aplicación para que pueda ser usada por index.ts
 export default app;
 
-console.log('🔄 app.ts cargado - servidor listo para iniciar');
+logger.debug('🔄 app.ts cargado - servidor listo para iniciar');
