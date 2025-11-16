@@ -50,6 +50,7 @@ const corsOptions = {
     const allowedOrigins = [
       'http://localhost:5173',
       'http://localhost:5174',
+      'https://glucosa-app-frontend.onrender.com', // URL del frontend en Render
       'https://glucosa-app-backend.onrender.com', // URL de tu backend en Render
       'capacitor://localhost', // Para aplicaciones Capacitor
       'http://localhost', // Para aplicaciones móviles
