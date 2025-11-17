@@ -2,6 +2,10 @@
 
 Backend para GlucosaApp - Acompañamiento nutricional y educativo para personas con diabetes tipo II
 
+## Estado del Servicio
+
+✅ **Servicio en funcionamiento** - Conectado al frontend móvil y web
+
 ## Requisitos Previos
 
 - Node.js (versión 14 o superior)
