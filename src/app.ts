@@ -55,7 +55,12 @@ const corsOptions = {
       'capacitor://localhost', // Para aplicaciones Capacitor
       'http://localhost', // Para aplicaciones móviles
       'http://localhost:8080', // Para Capacitor en algunos casos
-      'capacitor://localhost:8080' // Para Capacitor en algunos casos
+      'capacitor://localhost:8080', // Para Capacitor en algunos casos
+      'https://localhost', // Para aplicaciones móviles en HTTPS
+      'capacitor://glucosaguide', // Origen específico de la app móvil
+      'capacitor://com.glucoguide.app', // ID de la app móvil
+      'http://com.glucoguide.app', // ID de la app móvil en HTTP
+      'https://com.glucoguide.app' // ID de la app móvil en HTTPS
     ];
     
     // Permitir solicitudes sin origen (como mobile apps o curl)
@@ -70,7 +75,11 @@ const corsOptions = {
     } else {
       // Para aplicaciones móviles, siempre permitir (necesario para Capacitor)
       // Verificar si es una aplicación móvil por el esquema
-      if (origin.startsWith('capacitor://') || origin.startsWith('http://localhost')) {
+      if (origin.startsWith('capacitor://') || 
+          origin.startsWith('http://localhost') || 
+          origin.startsWith('https://localhost') ||
+          origin.includes('glucoguide') ||
+          origin.includes('com.glucoguide.app')) {
         logger.debug('Permitiendo origen móvil: %s', origin);
         callback(null, true);
       } else {
