@@ -27,26 +27,41 @@ describe('Food Controller', () => {
   });
 
   describe('getAllFoods', () => {
-    it('debería obtener todos los alimentos correctamente', async () => {
+    it('debería obtener todos los alimentos correctamente con paginación', async () => {
       const mockFoods = [
         { name: 'Manzana', category: 'frutas' },
         { name: 'Arroz', category: 'cereales' }
       ];
+      const mockTotalCount = 2;
 
-      // Mock para que find() devuelva un objeto con sort()
-      const mockFindResult = {
-        sort: jest.fn().mockResolvedValue(mockFoods)
+      // Create a mock chain object that simulates the MongoDB query chain
+      const mockQueryChain = {
+        sort: jest.fn().mockReturnThis(),
+        skip: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockResolvedValue(mockFoods)
       };
-      (Food.find as jest.Mock).mockReturnValue(mockFindResult);
+
+      // Mock find to return the chain
+      (Food.find as jest.Mock).mockReturnValue(mockQueryChain);
+      
+      // Mock countDocuments
+      (Food.countDocuments as jest.Mock).mockResolvedValue(mockTotalCount);
 
       await getAllFoods(mockRequest as Request, mockResponse as Response);
 
       expect(Food.find).toHaveBeenCalled();
-      expect(mockFindResult.sort).toHaveBeenCalledWith({ name: 1 });
-      // No esperamos que se llame a status(200) explícitamente
+      expect(mockQueryChain.sort).toHaveBeenCalledWith({ name: 1 });
+      expect(mockQueryChain.skip).toHaveBeenCalledWith(0);
+      expect(mockQueryChain.limit).toHaveBeenCalledWith(70);
+      expect(Food.countDocuments).toHaveBeenCalled();
+      
+      // Verificar la respuesta con paginación
       expect(mockJson).toHaveBeenCalledWith({
         success: true,
-        count: expect.any(Number),
+        count: mockFoods.length,
+        total: mockTotalCount,
+        page: 1,
+        pages: 1,
         data: expect.arrayContaining([
           expect.objectContaining({ name: 'Manzana', category: 'frutas' }),
           expect.objectContaining({ name: 'Arroz', category: 'cereales' })
@@ -56,13 +71,18 @@ describe('Food Controller', () => {
 
     it('debería manejar errores al obtener alimentos', async () => {
       const errorMessage = 'Error de base de datos';
-      // Simular un error sin crear una nueva instancia de Error
-      const mockFindResult = {
-        sort: jest.fn().mockImplementation(() => {
+      
+      // Create a mock chain object that throws an error
+      const mockQueryChain = {
+        sort: jest.fn().mockReturnThis(),
+        skip: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockImplementation(() => {
           throw new Error(errorMessage);
         })
       };
-      (Food.find as jest.Mock).mockReturnValue(mockFindResult);
+
+      // Mock find to return the chain
+      (Food.find as jest.Mock).mockReturnValue(mockQueryChain);
 
       await getAllFoods(mockRequest as Request, mockResponse as Response);
 
@@ -76,54 +96,87 @@ describe('Food Controller', () => {
   });
 
   describe('searchFoods', () => {
-    it('debería buscar alimentos por nombre', async () => {
-      const mockFoods = [{ name: 'Manzana', category: 'frutas' }];
+    it('debería buscar alimentos por nombre con paginación', async () => {
+      const mockFoods = [{ name: 'Manzana', category: 'frutas', commonNames: ['apple'] }];
+      const mockTotalCount = 1;
       mockRequest = {
         query: { query: 'manzana' }
       };
 
-      // Mock para que find() devuelva un objeto con sort()
-      const mockFindResult = {
-        sort: jest.fn().mockResolvedValue(mockFoods)
+      // Create a mock chain object that simulates the MongoDB query chain
+      const mockQueryChain = {
+        sort: jest.fn().mockReturnThis(),
+        skip: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockResolvedValue(mockFoods)
       };
-      (Food.find as jest.Mock).mockReturnValue(mockFindResult);
+
+      // Mock find to return the chain
+      (Food.find as jest.Mock).mockReturnValue(mockQueryChain);
+      
+      // Mock countDocuments
+      (Food.countDocuments as jest.Mock).mockResolvedValue(mockTotalCount);
 
       await searchFoods(mockRequest as Request, mockResponse as Response);
 
       expect(Food.find).toHaveBeenCalledWith({
-        name: { $regex: 'manzana', $options: 'i' }
+        $or: [
+          { name: { $regex: 'manzana', $options: 'i' } },
+          { commonNames: { $regex: 'manzana', $options: 'i' } }
+        ]
       });
-      expect(mockFindResult.sort).toHaveBeenCalledWith({ name: 1 });
+      expect(mockQueryChain.sort).toHaveBeenCalledWith({ name: 1 });
+      expect(mockQueryChain.skip).toHaveBeenCalledWith(0);
+      expect(mockQueryChain.limit).toHaveBeenCalledWith(70);
+      expect(Food.countDocuments).toHaveBeenCalled();
+      
       expect(mockJson).toHaveBeenCalledWith({
         success: true,
-        count: expect.any(Number),
+        count: mockFoods.length,
+        total: mockTotalCount,
+        page: 1,
+        pages: 1,
         data: expect.arrayContaining([
           expect.objectContaining({ name: 'Manzana', category: 'frutas' })
         ])
       });
     });
 
-    it('debería buscar alimentos por categoría', async () => {
-      const mockFoods = [{ name: 'Manzana', category: 'frutas' }];
+    it('debería buscar alimentos por categoría con paginación', async () => {
+      const mockFoods = [{ name: 'Manzana', category: 'frutas', commonNames: ['apple'] }];
+      const mockTotalCount = 1;
       mockRequest = {
         query: { category: 'frutas' }
       };
 
-      // Mock para que find() devuelva un objeto con sort()
-      const mockFindResult = {
-        sort: jest.fn().mockResolvedValue(mockFoods)
+      // Create a mock chain object that simulates the MongoDB query chain
+      const mockQueryChain = {
+        sort: jest.fn().mockReturnThis(),
+        skip: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockResolvedValue(mockFoods)
       };
-      (Food.find as jest.Mock).mockReturnValue(mockFindResult);
+
+      // Mock find to return the chain
+      (Food.find as jest.Mock).mockReturnValue(mockQueryChain);
+      
+      // Mock countDocuments
+      (Food.countDocuments as jest.Mock).mockResolvedValue(mockTotalCount);
 
       await searchFoods(mockRequest as Request, mockResponse as Response);
 
       expect(Food.find).toHaveBeenCalledWith({
         category: 'frutas'
       });
-      expect(mockFindResult.sort).toHaveBeenCalledWith({ name: 1 });
+      expect(mockQueryChain.sort).toHaveBeenCalledWith({ name: 1 });
+      expect(mockQueryChain.skip).toHaveBeenCalledWith(0);
+      expect(mockQueryChain.limit).toHaveBeenCalledWith(70);
+      expect(Food.countDocuments).toHaveBeenCalled();
+      
       expect(mockJson).toHaveBeenCalledWith({
         success: true,
-        count: expect.any(Number),
+        count: mockFoods.length,
+        total: mockTotalCount,
+        page: 1,
+        pages: 1,
         data: expect.arrayContaining([
           expect.objectContaining({ name: 'Manzana', category: 'frutas' })
         ])
