@@ -3,11 +3,16 @@ import { Request, Response } from 'express';
 import Food from '../models/food.model';
 import logger from '../utils/logger';
 
-// Obtener todos los alimentos con filtros opcionales
+// Obtener todos los alimentos con filtros opcionales y paginación
 export const getAllFoods = async (req: Request, res: Response) => {
   try {
     const query = req.query || {};
-    const { category, search } = query;
+    const { category, search, page = 1, limit = 70 } = query;
+    
+    // Convertir a números
+    const pageNum = parseInt(page as string) || 1;
+    const limitNum = parseInt(limit as string) || 70;
+    const skip = (pageNum - 1) * limitNum;
     
     // Construir filtro
     const filter: any = {};
@@ -19,16 +24,25 @@ export const getAllFoods = async (req: Request, res: Response) => {
     if (search) {
       filter.$or = [
         { name: { $regex: search as string, $options: 'i' } },
-        { description: { $regex: search as string, $options: 'i' } },
-        { tags: { $regex: search as string, $options: 'i' } }
+        { commonNames: { $regex: search as string, $options: 'i' } }
       ];
     }
     
-    const foods = await Food.find(filter).sort({ name: 1 });
+    // Obtener alimentos con paginación
+    const foods = await Food.find(filter)
+      .sort({ name: 1 })
+      .skip(skip)
+      .limit(limitNum);
+    
+    // Obtener el total de alimentos que coinciden con el filtro
+    const total = await Food.countDocuments(filter);
     
     res.json({
       success: true,
       count: foods.length,
+      total,
+      page: pageNum,
+      pages: Math.ceil(total / limitNum),
       data: foods
     });
   } catch (error: any) {
@@ -41,28 +55,46 @@ export const getAllFoods = async (req: Request, res: Response) => {
   }
 };
 
-// Buscar alimentos por nombre o categoría
+// Buscar alimentos por nombre o categoría con paginación
 export const searchFoods = async (req: Request, res: Response) => {
   try {
     const query = req.query || {};
-    const { query: searchQuery, category } = query;
+    const { query: searchQuery, category, page = 1, limit = 70 } = query;
+    
+    // Convertir a números
+    const pageNum = parseInt(page as string) || 1;
+    const limitNum = parseInt(limit as string) || 70;
+    const skip = (pageNum - 1) * limitNum;
     
     // Construir filtro
     const filter: any = {};
     
     if (searchQuery) {
-      filter.name = { $regex: searchQuery as string, $options: 'i' };
+      filter.$or = [
+        { name: { $regex: searchQuery as string, $options: 'i' } },
+        { commonNames: { $regex: searchQuery as string, $options: 'i' } }
+      ];
     }
     
-    if (category) {
+    if (category && category !== 'todos') {
       filter.category = category;
     }
     
-    const foods = await Food.find(filter).sort({ name: 1 });
+    // Obtener alimentos con paginación
+    const foods = await Food.find(filter)
+      .sort({ name: 1 })
+      .skip(skip)
+      .limit(limitNum);
+    
+    // Obtener el total de alimentos que coinciden con el filtro
+    const total = await Food.countDocuments(filter);
     
     res.json({
       success: true,
       count: foods.length,
+      total,
+      page: pageNum,
+      pages: Math.ceil(total / limitNum),
       data: foods
     });
   } catch (error: any) {
